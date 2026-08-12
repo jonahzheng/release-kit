@@ -1,49 +1,31 @@
 # release-kit
 
-Flutter release toolkit: **automatic version management** + **multi-platform packaging**, with a unified config entry, reusable by any Flutter project.
+**[English](README.md) | [简体中文](README.zh.md)**
 
-> Independently extracted from ZShell (ZShell stays as-is). Windows + Android first; macOS / Linux / iOS are skeletons.
+Flutter release toolkit: **automatic version management** + **multi-platform packaging**, unified config, reusable by any Flutter project.
 
-## Features
-
-- **Automatic version bumping** (`bin/bump_version.dart` + pre-commit hook)
-  - Analyzes staged changes to decide the bump: deleted source → major, added/major changes → minor, minor changes → patch, build +1
-  - Supports both monorepo (`app/` subdirectory) and standalone project (root directory) layouts
-  - `git commit --no-verify` skips the bump (release freeze)
-- **Unified config**: one flat config file shared by Windows/Android/Linux/macOS/iOS scripts
-  - Resolution: `<project>/release-kit.yaml` → `<project>/config.yaml` → tool default
-- **Multi-platform packaging**: `scripts/publish_*.sh` / `publish_windows.ps1`
-  - Windows: zip + optional hardening rename (engine DLL rename + import table patch)
-  - Android: APK + AAB
-  - macOS / iOS / Linux: skeleton scripts
-- **Auto-generated icons**: set `app.logo` in your config with a single source image; `publish` regenerates Android / iOS / macOS / Windows launcher icons via `flutter_launcher_icons`
+- Version auto-bumps on `git commit` (smart major/minor/patch + build)
+- One flat config (`release-kit.yaml`) shared by all platform scripts
+- Package Windows / Android / macOS / Linux / iOS with one command
+- Auto-generate launcher icons from a single `app.logo` image
 
 ## Quick Start
 
 ```bash
-# 1. Copy release-kit into your environment
-git clone <release-kit-repo> tools/release-kit
-cd /path/to/myapp
+git clone <release-kit-repo> tools/release-kit   # 1. get the tool
+cd /path/to/myapp                                 # 2. your Flutter project
 
-# 2. One-click init: copies a config template (release-kit.yaml) + installs the hook
-./tools/release-kit/release-kit.sh init
-
-# 3. Edit the config to match your app
-#    release-kit.yaml  (keep it in YOUR repo, versioned with your project)
-
-# 4. Package any platform with one command
-./tools/release-kit/release-kit.sh publish windows [-Obfuscate]
-./tools/release-kit/release-kit.sh publish android
+tools/release-kit/release-kit.sh init             # 3. one step: config + hook
+tools/release-kit/release-kit.sh publish android  # 4. build & package
 ```
 
-- Config is kept **inside your project** (`release-kit.yaml`), not inside the tool.
-- Every `git commit` automatically bumps `pubspec.yaml` (skip with `--no-verify`).
+- Config lives in **your project** (`release-kit.yaml`) — edit it after `init`.
+- `git commit` auto-bumps `pubspec.yaml` (skip with `--no-verify`).
 - Artifacts go to `dist/<app>-<version>-<platform>`.
 
-### Windows
+Windows? Use `release-kit.ps1` instead of `release-kit.sh`:
 
 ```powershell
-# same workflow, PowerShell entry:
 .\tools\release-kit\release-kit.ps1 init
 .\tools\release-kit\release-kit.ps1 publish windows -Obfuscate
 ```
@@ -55,7 +37,7 @@ cd /path/to/myapp
 | `release-kit init` | copy `release-kit.yaml` template + install hook (one step) |
 | `release-kit publish <platform>` | build & package (windows / android / macos / linux / ios) |
 
-Both commands target the current directory. Add `-p <project-root>` (anywhere in the args) to target another project from any directory:
+Both target the current directory. Add `-p <project-root>` (anywhere in the args) to target another project from any directory:
 
 ```bash
 release-kit init -p /path/to/myapp
@@ -70,15 +52,17 @@ bin/
   bump_version.dart       # automatic version bump (pure Dart)
   pre-commit.hook         # hook template
 scripts/
+  generate_icons.sh/.ps1  # auto-generate launcher icons (app.logo)
   install_hook.ps1/.sh    # one-click hook installer
   common.sh               # shared logic
   publish_windows.ps1     # Windows packaging
   publish_android.sh      # Android packaging
-  publish_macos.sh        # macOS skeleton
-  publish_linux.sh        # Linux skeleton
-  publish_ios.sh          # iOS skeleton
+  publish_macos.sh        # macOS packaging
+  publish_linux.sh        # Linux packaging
+  publish_ios.sh          # iOS packaging
 config.yaml               # default config template
 docs/RELEASE.md           # usage docs
+README.md / README.zh.md  # English / 简体中文
 ```
 
 ## License
