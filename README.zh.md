@@ -44,6 +44,22 @@ release-kit init -p /path/to/myapp
 release-kit publish android -Obfuscate -p /path/to/myapp
 ```
 
+### 平台参数
+
+| 平台 | 参数 | 说明 |
+|---|---|---|
+| windows | `-Obfuscate` | Dart 混淆发布构建（符号存 `build/obfuscate_symbols`） |
+| | `-SkipBuild` | 复用已有构建产物，只收集并打包 zip |
+| | `-NoRename` | 即使 `hardening.enabled` 为 true 也跳过加固改名 |
+| | `-OutputDir <路径>` | 自定义产物目录（默认 `<项目>/dist/<binary>`） |
+| android | `--apk` / `--aab` | 只构建 APK 或只构建 AAB（默认两者都构建） |
+| | `--skip-build` | 复用已有产物，只收集 |
+| linux | `--skip-build` | 复用已有产物，只打包 |
+| | `--appimage` | 额外构建 AppImage（需 `linuxdeploy` 在 PATH 中） |
+| macos / ios | `--skip-build` | 复用已有产物，只打包 |
+
+以上参数均可与 `-p <项目根>` 组合使用（参数任意位置）。
+
 ## 目录
 
 ```

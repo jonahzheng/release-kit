@@ -44,6 +44,22 @@ release-kit init -p /path/to/myapp
 release-kit publish android -Obfuscate -p /path/to/myapp
 ```
 
+### Platform flags
+
+| Platform | Flags | Description |
+|---|---|---|
+| windows | `-Obfuscate` | Dart obfuscated release build (symbols in `build/obfuscate_symbols`) |
+| | `-SkipBuild` | reuse existing build outputs, just collect & zip |
+| | `-NoRename` | skip hardening rename even if `hardening.enabled` is true |
+| | `-OutputDir <path>` | custom artifact dir (default: `<project>/dist/<binary>`) |
+| android | `--apk` / `--aab` | build only APK or only AAB (default: both) |
+| | `--skip-build` | reuse existing outputs, just collect |
+| linux | `--skip-build` | reuse existing outputs, just package |
+| | `--appimage` | also build an AppImage (requires `linuxdeploy` on PATH) |
+| macos / ios | `--skip-build` | reuse existing outputs, just package |
+
+`-p <project-root>` works with any of the above, anywhere in the args.
+
 ## Layout
 
 ```
