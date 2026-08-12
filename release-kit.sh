@@ -49,15 +49,27 @@ set -- $(extract_project "$@")
 PROJECT_ARG=$(cat "$PROJECT_TMP")
 rm -f "$PROJECT_TMP"
 
+# resolve the effective project root (cwd unless -p was given)
+ROOT="$PROJECT_ARG"
+[ -z "$ROOT" ] && ROOT=$(pwd)
+
 # validate project root early (before touching the filesystem)
-if [ -n "$PROJECT_ARG" ] && [ ! -d "$PROJECT_ARG" ]; then
-  echo "project root not found: $PROJECT_ARG" >&2
+if [ ! -d "$ROOT" ]; then
+  echo "release-kit: project root not found: $ROOT" >&2
+  exit 1
+fi
+
+# validate pubspec exists before doing anything, so we never write config
+# files or run builds against a non-Flutter directory
+if [ ! -f "$ROOT/pubspec.yaml" ] && [ ! -f "$ROOT/app/pubspec.yaml" ]; then
+  echo "release-kit: no pubspec.yaml found under $ROOT" >&2
+  echo "  run from your Flutter project root, or pass -p <project-root>" >&2
   exit 1
 fi
 
 case "$cmd" in
   init)
-    if [ -n "$PROJECT_ARG" ]; then cd "$PROJECT_ARG"; fi
+    cd "$ROOT"
     cfg="release-kit.yaml"
     if [ ! -f "$cfg" ]; then
       cp "$KIT_ROOT/config.yaml" "$cfg"
@@ -69,9 +81,7 @@ case "$cmd" in
     ;;
   publish)
     platform="$1"; shift || usage
-    if [ -n "$PROJECT_ARG" ]; then
-      cd "$PROJECT_ARG" || { echo "cannot cd to $PROJECT_ARG" >&2; exit 1; }
-    fi
+    cd "$ROOT"
     case "$platform" in
       windows) powershell -ExecutionPolicy Bypass -File "$KIT_ROOT/scripts/publish_windows.ps1" "$@" ;;
       android) exec "$KIT_ROOT/scripts/publish_android.sh" "$@" ;;

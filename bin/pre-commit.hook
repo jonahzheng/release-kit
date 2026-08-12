@@ -17,6 +17,9 @@ if command -v dart >/dev/null 2>&1; then
     echo "Use 'git commit --no-verify' to skip version bumping." >&2
     exit 1
   fi
+else
+  echo "pre-commit: 'dart' not found on PATH - version bump SKIPPED." >&2
+  echo "Install the Dart SDK, or use 'git commit --no-verify' to skip." >&2
 fi
 
 exit 0

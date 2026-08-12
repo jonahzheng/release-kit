@@ -71,9 +71,6 @@ release-kit init
 | 键 | 说明 |
 |---|---|
 | `app.name` | 应用名（zip/产物命名） |
-| `app.displayName` | 显示名 |
-| `app.version` | 版本（由 bump_version 维护） |
-| `app.icon` | 图标路径 |
 | `app.bundleId` | Android 包名 / iOS bundle id |
 | `build.dartDefine.*` | `--dart-define` 注入项 |
 | `output.dir` | 产物输出目录（默认 `dist`） |

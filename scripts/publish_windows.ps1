@@ -23,10 +23,12 @@ if (-not (Test-Path (Join-Path $proj "pubspec.yaml"))) {
 }
 
 # --- resolve config: project-local release-kit.yaml > config.yaml > kit default ---
+# (monorepo: the project may be under app/, config may sit at the repo root)
 $configPath = $null
-if (Test-Path (Join-Path $proj "release-kit.yaml")) { $configPath = Join-Path $proj "release-kit.yaml" }
-elseif (Test-Path (Join-Path $proj "config.yaml")) { $configPath = Join-Path $proj "config.yaml" }
-elseif (Test-Path (Join-Path $kitRoot "config.yaml")) { $configPath = Join-Path $kitRoot "config.yaml" }
+foreach ($dir in @($proj, (Split-Path -Parent $proj), $kitRoot)) {
+  if (Test-Path (Join-Path $dir "release-kit.yaml")) { $configPath = Join-Path $dir "release-kit.yaml"; break }
+  if (Test-Path (Join-Path $dir "config.yaml")) { $configPath = Join-Path $dir "config.yaml"; break }
+}
 if (-not $configPath) { throw "No config found (release-kit.yaml or config.yaml)" }
 
 # --- read config (flat key: value) ---
@@ -41,15 +43,14 @@ function Get-Cfg($key) {
   return ""
 }
 
-$appName    = Get-Cfg "app.name"
-$display    = Get-Cfg "app.displayName"
-$icon       = Get-Cfg "app.icon"
-$bundleId   = Get-Cfg "app.bundleId"
+$appName     = Get-Cfg "app.name"
 $hardEnabled = (Get-Cfg "hardening.enabled") -eq "true"
-$dllNew     = Get-Cfg "hardening.engineDll"
-$assetNew   = Get-Cfg "hardening.assetDir"
+$dllNew      = Get-Cfg "hardening.engineDll"
+$assetNew    = Get-Cfg "hardening.assetDir"
+$cfgOutDir   = Get-Cfg "output.dir"
 if (-not $dllNew) { $dllNew = "core_engine.dll" }
 if (-not $assetNew) { $assetNew = "resources" }
+if (-not $cfgOutDir) { $cfgOutDir = "dist" }
 
 if (-not $appName) { $appName = Split-Path -Leaf $proj }
 
@@ -107,7 +108,7 @@ $release = Join-Path $proj "build\windows\x64\runner\Release"
 if (-not (Test-Path $release)) { throw "Release dir not found: $release" }
 
 # --- collect ---
-if ($OutputDir -eq "") { $OutputDir = Join-Path $proj "dist\$binary" }
+if ($OutputDir -eq "") { $OutputDir = Join-Path $proj "$cfgOutDir\$binary" }
 if (Test-Path $OutputDir) { Remove-Item $OutputDir -Recurse -Force }
 New-Item -ItemType Directory -Path $OutputDir -Force | Out-Null
 

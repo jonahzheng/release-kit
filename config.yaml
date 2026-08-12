@@ -5,9 +5,6 @@
 
 # --- App info ---
 app.name: myapp
-app.displayName: MyApp
-app.version: 0.1.0+1        # maintained by bump_version.dart
-app.icon: assets/app_icon.ico
 app.bundleId: com.example.myapp
 
 # --- Build-time defines (injected via --dart-define) ---
