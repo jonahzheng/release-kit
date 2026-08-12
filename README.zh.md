@@ -18,45 +18,47 @@ Flutter 发布工具库：**版本号自动管理** + **多平台打包**，统�
 
 ## 快速开始
 
-### 1. 复制 release-kit 到你的环境
-
 ```bash
-# 假设你的 Flutter 项目在 /path/to/myapp
-git clone <release-kit-repo> /path/to/release-kit
+# 1. 复制 release-kit 到你的环境
+git clone <release-kit-repo> tools/release-kit
 cd /path/to/myapp
+
+# 2. 一键初始化：生成配置模板（release-kit.yaml）+ 安装 hook
+./tools/release-kit/release-kit.sh init
+
+# 3. 编辑配置，匹配你的应用
+#    release-kit.yaml（放在【你的项目】里，随项目版本管理）
+
+# 4. 一条命令打包任意平台
+./tools/release-kit/release-kit.sh publish windows [-Obfuscate]
+./tools/release-kit/release-kit.sh publish android
 ```
 
-### 2. 配置
+- 配置放在**项目内**（`release-kit.yaml`），不再依赖工具目录。
+- 每次 `git commit` 自动递增 `pubspec.yaml` 版本（`--no-verify` 跳过）。
+- 产物输出到 `dist/<app>-<version>-<platform>`。
 
-编辑 `release-kit/config.yaml`，设置应用名、图标、bundle id、服务器地址等。
+### Windows
 
-### 3. 安装版本自动递增 hook
-
-```bash
-# Windows
-powershell -ExecutionPolicy Bypass -File release-kit/scripts/install_hook.ps1 -ProjectRoot .
-
-# macOS / Linux
-./release-kit/scripts/install_hook.sh -p .
+```powershell
+# 相同流程，PowerShell 入口：
+.\tools\release-kit\release-kit.ps1 init
+.\tools\release-kit\release-kit.ps1 publish windows -Obfuscate
 ```
 
-之后每次 `git commit` 自动递增 `pubspec.yaml` 版本。
+### 命令一览
 
-### 4. 打包
-
-```bash
-# Windows（从 Flutter 项目根运行）
-powershell -ExecutionPolicy Bypass -File release-kit/scripts/publish_windows.ps1 -Obfuscate
-
-# Android
-./release-kit/scripts/publish_android.sh
-```
-
-产物输出到 `dist/<app>-<version>-<platform>`。
+| 命令 | 说明 |
+|---|---|
+| `release-kit init` | 生成 `release-kit.yaml` 模板 + 安装 hook（一步完成） |
+| `release-kit install` | 仅安装 pre-commit hook |
+| `release-kit publish <platform>` | 打包（windows / android / macos / linux / ios） |
+| `release-kit bump [--build-only]` | 手动递增 pubspec 版本 |
 
 ## 目录
 
 ```
+release-kit.sh / release-kit.ps1   # 统一命令行入口
 bin/
   bump_version.dart       # 版本自动递增（纯 Dart）
   pre-commit.hook         # hook 模板
@@ -68,7 +70,7 @@ scripts/
   publish_macos.sh        # macOS 骨架
   publish_linux.sh        # Linux 骨架
   publish_ios.sh          # iOS 骨架
-config.yaml               # 统一配置
+config.yaml               # 默认配置模板
 docs/RELEASE.md           # 使用文档
 ```
 

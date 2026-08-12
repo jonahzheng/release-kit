@@ -18,45 +18,47 @@ Flutter release toolkit: **automatic version management** + **multi-platform pac
 
 ## Quick Start
 
-### 1. Copy release-kit into your environment
-
 ```bash
-# Assuming your Flutter project is at /path/to/myapp
-git clone <release-kit-repo> /path/to/release-kit
+# 1. Copy release-kit into your environment
+git clone <release-kit-repo> tools/release-kit
 cd /path/to/myapp
+
+# 2. One-click init: copies a config template (release-kit.yaml) + installs the hook
+./tools/release-kit/release-kit.sh init
+
+# 3. Edit the config to match your app
+#    release-kit.yaml  (keep it in YOUR repo, versioned with your project)
+
+# 4. Package any platform with one command
+./tools/release-kit/release-kit.sh publish windows [-Obfuscate]
+./tools/release-kit/release-kit.sh publish android
 ```
 
-### 2. Configure
+- Config is kept **inside your project** (`release-kit.yaml`), not inside the tool.
+- Every `git commit` automatically bumps `pubspec.yaml` (skip with `--no-verify`).
+- Artifacts go to `dist/<app>-<version>-<platform>`.
 
-Edit `release-kit/config.yaml` and set the app name, icon, bundle id, server address, etc.
+### Windows
 
-### 3. Install the version-bump hook
-
-```bash
-# Windows
-powershell -ExecutionPolicy Bypass -File release-kit/scripts/install_hook.ps1 -ProjectRoot .
-
-# macOS / Linux
-./release-kit/scripts/install_hook.sh -p .
+```powershell
+# same workflow, PowerShell entry:
+.\tools\release-kit\release-kit.ps1 init
+.\tools\release-kit\release-kit.ps1 publish windows -Obfuscate
 ```
 
-Every `git commit` will then automatically bump the version in `pubspec.yaml`.
+### Commands
 
-### 4. Package
-
-```bash
-# Windows (run from the Flutter project root)
-powershell -ExecutionPolicy Bypass -File release-kit/scripts/publish_windows.ps1 -Obfuscate
-
-# Android
-./release-kit/scripts/publish_android.sh
-```
-
-Artifacts are written to `dist/<app>-<version>-<platform>`.
+| Command | Description |
+|---|---|
+| `release-kit init` | copy `release-kit.yaml` template + install hook (one step) |
+| `release-kit install` | install the pre-commit hook only |
+| `release-kit publish <platform>` | build & package (windows / android / macos / linux / ios) |
+| `release-kit bump [--build-only]` | manually bump the pubspec version |
 
 ## Layout
 
 ```
+release-kit.sh / release-kit.ps1   # unified CLI entry
 bin/
   bump_version.dart       # automatic version bump (pure Dart)
   pre-commit.hook         # hook template
@@ -68,7 +70,7 @@ scripts/
   publish_macos.sh        # macOS skeleton
   publish_linux.sh        # Linux skeleton
   publish_ios.sh          # iOS skeleton
-config.yaml               # unified config
+config.yaml               # default config template
 docs/RELEASE.md           # usage docs
 ```
 

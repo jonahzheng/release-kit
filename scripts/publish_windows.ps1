@@ -12,11 +12,25 @@ param(
 
 $ErrorActionPreference = "Stop"
 $kitRoot = Split-Path -Parent $PSScriptRoot   # release-kit/
-$configPath = Join-Path $kitRoot "config.yaml"
+
+# --- locate project root (cwd with pubspec, or app/ subdir) ---
+$proj = (Get-Location).Path
+if (-not (Test-Path (Join-Path $proj "pubspec.yaml"))) {
+  if (Test-Path (Join-Path $proj "app\pubspec.yaml")) { $proj = Join-Path $proj "app" }
+}
+if (-not (Test-Path (Join-Path $proj "pubspec.yaml"))) {
+  throw "No pubspec.yaml found (run from project root or app/ subdir)"
+}
+
+# --- resolve config: project-local release-kit.yaml > config.yaml > kit default ---
+$configPath = $null
+if (Test-Path (Join-Path $proj "release-kit.yaml")) { $configPath = Join-Path $proj "release-kit.yaml" }
+elseif (Test-Path (Join-Path $proj "config.yaml")) { $configPath = Join-Path $proj "config.yaml" }
+elseif (Test-Path (Join-Path $kitRoot "config.yaml")) { $configPath = Join-Path $kitRoot "config.yaml" }
+if (-not $configPath) { throw "No config found (release-kit.yaml or config.yaml)" }
 
 # --- read config (flat key: value) ---
 function Get-Cfg($key) {
-  if (-not (Test-Path $configPath)) { return "" }
   foreach ($line in Get-Content $configPath) {
     $t = $line.Trim()
     if ($t -eq "" -or $t.StartsWith("#")) { continue }
@@ -37,14 +51,6 @@ $assetNew   = Get-Cfg "hardening.assetDir"
 if (-not $dllNew) { $dllNew = "core_engine.dll" }
 if (-not $assetNew) { $assetNew = "resources" }
 
-# --- locate project root (cwd with pubspec, or app/ subdir) ---
-$proj = (Get-Location).Path
-if (-not (Test-Path (Join-Path $proj "pubspec.yaml"))) {
-  if (Test-Path (Join-Path $proj "app\pubspec.yaml")) { $proj = Join-Path $proj "app" }
-}
-if (-not (Test-Path (Join-Path $proj "pubspec.yaml"))) {
-  throw "No pubspec.yaml found (run from project root or app/ subdir)"
-}
 if (-not $appName) { $appName = Split-Path -Leaf $proj }
 
 # binary name from CMake

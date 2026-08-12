@@ -7,10 +7,33 @@
 _common_dir=$(CDPATH= cd -- "$(dirname "${BASH_SOURCE:-$0}")" && pwd)
 KIT_ROOT=$(CDPATH= cd -- "$_common_dir/.." && pwd)
 
+# --- resolve config file ---
+# Project-local config wins over the tool default:
+#   <project>/release-kit.yaml  (recommended, keep config in your repo)
+#   <project>/config.yaml       (alternative)
+#   $KIT_ROOT/config.yaml       (tool default)
+# usage: cfg_file <project_root> -> echoes path (or empty)
+cfg_file() {
+  local proj="$1"
+  if [ -f "$proj/release-kit.yaml" ]; then
+    echo "$proj/release-kit.yaml"
+  elif [ -f "$proj/config.yaml" ]; then
+    echo "$proj/config.yaml"
+  elif [ -f "$KIT_ROOT/config.yaml" ]; then
+    echo "$KIT_ROOT/config.yaml"
+  fi
+}
+
 # --- parse config.yaml (flat key: value, dot-namespace) ---
-# usage: cfg_get <key>  -> echoes value (or empty)
+# usage: cfg_get <key> [<config-file>]  -> echoes value (or empty)
 cfg_get() {
-  local key="$1" line value
+  local key="$1" line value cfg
+  if [ -n "$2" ]; then
+    cfg="$2"
+  else
+    cfg=$(cfg_file "$PROJECT_ROOT")
+  fi
+  [ -n "$cfg" ] || return 1
   while IFS= read -r line; do
     # strip comments and blanks
     case "$line" in
@@ -25,7 +48,7 @@ cfg_get() {
         return 0
         ;;
     esac
-  done < "$KIT_ROOT/config.yaml"
+  done < "$cfg"
   return 1
 }
 
@@ -76,13 +99,15 @@ sha256_file() {
 # --- dart-define args from config (build.dartDefine.*) ---
 # usage: dart_defines -> echoes "-Dkey=value ..."
 dart_defines() {
-  local key value
+  local key value cfg
+  cfg=$(cfg_file "$PROJECT_ROOT")
+  [ -n "$cfg" ] || return 0
   while IFS= read -r key; do
-    value=$(cfg_get "build.dartDefine.$key" 2>/dev/null)
+    value=$(cfg_get "build.dartDefine.$key" "$cfg")
     if [ -n "$value" ]; then
       printf '%s' " --dart-define=$key=$value"
     fi
-  done < <(grep -oE '^build\.dartDefine\.[A-Za-z0-9_]+:' "$KIT_ROOT/config.yaml" | sed 's/^build.dartDefine.//; s/:$//')
+  done < <(grep -oE '^build\.dartDefine\.[A-Za-z0-9_]+:' "$cfg" | sed 's/^build.dartDefine.//; s/:$//')
 }
 
 print_artifact() {

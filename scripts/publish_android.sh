@@ -21,16 +21,17 @@ for arg in "$@"; do
   esac
 done
 
-APP_NAME=$(cfg_get "app.name")
-BUNDLE_ID=$(cfg_get "app.bundleId")
-OUT_DIR=$(cfg_get "output.dir"); [ -z "$OUT_DIR" ] && OUT_DIR=dist
-KEYSTORE=$(cfg_get "android.keystore")
-KEY_ALIAS=$(cfg_get "android.keyAlias")
-KEY_PASS="${ANDROID_KEY_PASSWORD:-}"
-STORE_PASS="${ANDROID_STORE_PASSWORD:-}"
-
 PROJECT_ROOT=$(resolve_project)
 cd "$PROJECT_ROOT"
+CONFIG_FILE=$(cfg_file "$PROJECT_ROOT")
+
+APP_NAME=$(cfg_get "app.name" "$CONFIG_FILE")
+BUNDLE_ID=$(cfg_get "app.bundleId" "$CONFIG_FILE")
+OUT_DIR=$(cfg_get "output.dir" "$CONFIG_FILE"); [ -z "$OUT_DIR" ] && OUT_DIR=dist
+KEYSTORE=$(cfg_get "android.keystore" "$CONFIG_FILE")
+KEY_ALIAS=$(cfg_get "android.keyAlias" "$CONFIG_FILE")
+KEY_PASS="${ANDROID_KEY_PASSWORD:-}"
+STORE_PASS="${ANDROID_STORE_PASSWORD:-}"
 
 PUBSPEC="$PROJECT_ROOT/pubspec.yaml"
 read_version "$PUBSPEC"

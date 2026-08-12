@@ -1,5 +1,22 @@
 # release-kit 使用文档
 
+## 〇、统一入口
+
+所有操作通过 `release-kit.sh`（macOS/Linux）或 `release-kit.ps1`（Windows）完成：
+
+```bash
+release-kit init                       # 一键初始化（生成配置 + 安装 hook）
+release-kit install                    # 仅安装 hook
+release-kit publish <platform> [args]  # 打包
+release-kit bump [--build-only]        # 手动递增版本
+```
+
+配置文件放在**项目内**，解析优先级：
+
+1. `<项目>/release-kit.yaml`（推荐，随项目入库）
+2. `<项目>/config.yaml`
+3. 工具默认 `config.yaml`
+
 ## 一、版本号管理
 
 ### 递增规则（`bin/bump_version.dart`）
@@ -23,24 +40,24 @@ build 号（`+N`）每次提交 +1。
 ### 手动调用
 
 ```bash
-dart run bin/bump_version.dart                # 智能递增 + build+1
-dart run bin/bump_version.dart --build-only   # 仅 build+1（发布锁定）
+release-kit bump                # 智能递增 + build+1
+release-kit bump --build-only   # 仅 build+1（发布锁定）
 ```
 
 ### hook 安装
 
 ```bash
-# Windows
-powershell -ExecutionPolicy Bypass -File scripts/install_hook.ps1 -ProjectRoot /path/to/project
-# macOS/Linux
-./scripts/install_hook.sh -p /path/to/project
+release-kit install
+# 或 init（生成配置 + 安装 hook，一步完成）
 ```
 
 效果：`git config core.hooksPath` 指向项目 `.githooks`，每次 `git commit` 自动递增并 stage。
 
 跳过递增（发布锁定版本）：`git commit --no-verify`。
 
-## 二、统一配置 `config.yaml`
+## 二、统一配置
+
+配置放在项目内：`<项目>/release-kit.yaml`（由 `release-kit init` 从工具模板复制而来）。
 
 扁平 `key: value`，点号命名空间，`#` 注释。所有打包脚本读取同一份。
 
@@ -66,7 +83,7 @@ powershell -ExecutionPolicy Bypass -File scripts/install_hook.ps1 -ProjectRoot /
 ### Windows
 
 ```bash
-powershell -ExecutionPolicy Bypass -File scripts/publish_windows.ps1 [-Obfuscate] [-SkipBuild] [-NoRename]
+release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename]
 ```
 
 - `-Obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
@@ -76,7 +93,7 @@ powershell -ExecutionPolicy Bypass -File scripts/publish_windows.ps1 [-Obfuscate
 ### Android
 
 ```bash
-./scripts/publish_android.sh [--apk] [--aab] [--skip-build]
+release-kit publish android [--apk] [--aab] [--skip-build]
 ```
 
 - 默认构建 APK + AAB
@@ -96,6 +113,6 @@ powershell -ExecutionPolicy Bypass -File scripts/publish_windows.ps1 [-Obfuscate
 | 现象 | 原因 | 解决 |
 |---|---|---|
 | hook 报 `version: line not found` | pubspec 无 `version:` 行 | 在 pubspec 添加 `version: 0.1.0+1` |
-| hook 不生效 | `core.hooksPath` 未配置 | 重跑 install_hook |
+| hook 不生效 | `core.hooksPath` 未配置 | 重跑 `release-kit install` |
 | Windows 打包 DLL_NOT_FOUND | 加固改名后导入表未补丁 | 用最新脚本重跑（自动补丁） |
 | Android 打包签名失败 | keystore 密码未传 | 设置 `ANDROID_KEY_PASSWORD` 等环境变量 |
