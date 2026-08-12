@@ -4,22 +4,33 @@
 #   ./publish_android.sh [--apk] [--aab] [--skip-build]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 # Secrets: ANDROID_KEY_PASSWORD / ANDROID_STORE_PASSWORD env vars.
+#
+# Flags:
+#   default   build & collect APK + AAB
+#   --apk     only APK   (turns off AAB)
+#   --aab     only AAB   (turns off APK)
+#   --skip-build  reuse existing build outputs, just collect artifacts
 
 set -e
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 . "$KIT_ROOT/scripts/common.sh"
 
-DO_APK=0
+DO_APK=1
 DO_AAB=1
+SAW_APK=0
+SAW_AAB=0
 SKIP_BUILD=0
 for arg in "$@"; do
   case "$arg" in
-    --apk) DO_APK=1 ;;
-    --aab) DO_AAB=1 ;;
+    --apk) DO_APK=1; SAW_APK=1 ;;
+    --aab) DO_AAB=1; SAW_AAB=1 ;;
     --skip-build) SKIP_BUILD=1 ;;
     *) echo "usage: $0 [--apk] [--aab] [--skip-build]" >&2; exit 2 ;;
   esac
 done
+# "--apk" alone means APK only; "--aab" alone means AAB only; both given = both
+if [ "$SAW_APK" = "1" ] && [ "$SAW_AAB" = "0" ]; then DO_AAB=0; fi
+if [ "$SAW_AAB" = "1" ] && [ "$SAW_APK" = "0" ]; then DO_APK=0; fi
 
 PROJECT_ROOT=$(resolve_project)
 cd "$PROJECT_ROOT"
@@ -40,13 +51,16 @@ read_version "$PUBSPEC"
 echo "==> release-kit publish_android"
 echo "    project: $PROJECT_ROOT"
 echo "    app: $APP_NAME ($VERSION)  bundle: $BUNDLE_ID"
+echo "    targets: $(if [ "$DO_APK" = 1 ]; then printf 'apk '; fi)$(if [ "$DO_AAB" = 1 ]; then printf 'aab'; fi)"
 
 DEFINES=$(dart_defines)
 
 if [ "$SKIP_BUILD" = "0" ]; then
-  echo "==> flutter build apk --release"
-  # shellcheck disable=SC2086
-  flutter build apk --release $DEFINES
+  if [ "$DO_APK" = "1" ]; then
+    echo "==> flutter build apk --release"
+    # shellcheck disable=SC2086
+    flutter build apk --release $DEFINES
+  fi
   if [ "$DO_AAB" = "1" ]; then
     echo "==> flutter build appbundle --release"
     # shellcheck disable=SC2086
@@ -57,7 +71,7 @@ fi
 APK_DIR="$PROJECT_ROOT/build/app/outputs/flutter-apk"
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"
 
-if [ "$DO_APK" = "1" ] || [ "$SKIP_BUILD" = "1" ]; then
+if [ "$DO_APK" = "1" ]; then
   if [ -f "$APK_DIR/app-release.apk" ]; then
     APK_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-android.apk"
     cp "$APK_DIR/app-release.apk" "$APK_OUT"
