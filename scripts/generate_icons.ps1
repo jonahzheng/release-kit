@@ -10,6 +10,58 @@
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+
+Add-Type -AssemblyName System.Drawing
+
+# Rebuild an .ico with multiple size frames (16..256) from a source PNG, so
+# Windows uses a dedicated frame for taskbar/explorer/titlebar small icons
+# instead of scaling down a single 256px frame.
+function Expand-Icon {
+  param(
+    [string]$IcoPath,
+    [string]$SourcePng
+  )
+  if (-not (Test-Path $SourcePng)) { return }
+  try {
+    $src = [System.Drawing.Image]::FromFile($SourcePng)
+    $sizes = @(256, 128, 64, 48, 32, 24, 16)
+    $frames = @()
+    foreach ($s in $sizes) {
+      $bmp = New-Object System.Drawing.Bitmap($s, $s)
+      $g = [System.Drawing.Graphics]::FromImage($bmp)
+      $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+      $g.DrawImage($src, 0, 0, $s, $s)
+      $g.Dispose()
+      $ms = New-Object System.IO.MemoryStream
+      $bmp.Save($ms, [System.Drawing.Imaging.ImageFormat]::Png)
+      $frames += ,@($bmp, $ms.ToArray())
+      $bmp.Dispose()
+      $ms.Dispose()
+    }
+    $src.Dispose()
+
+    $fs = [System.IO.File]::Create($IcoPath)
+    $bw = New-Object System.IO.BinaryWriter($fs)
+    $bw.Write([uint16]0); $bw.Write([uint16]1); $bw.Write([uint16]$sizes.Count)
+    $dataStart = 6 + 16 * $sizes.Count
+    $cur = $dataStart
+    $entryData = @()
+    for ($i = 0; $i -lt $sizes.Count; $i++) {
+      $s = $sizes[$i]; $bytes = $frames[$i][1]
+      $dim = if ($s -ge 256) { 0 } else { $s }
+      $bw.Write([byte]$dim); $bw.Write([byte]$dim); $bw.Write([byte]0); $bw.Write([byte]0)
+      $bw.Write([uint16]1); $bw.Write([uint16]32)
+      $bw.Write([uint32]$bytes.Length); $bw.Write([uint32]$cur)
+      $entryData += ,@($cur, $bytes)
+      $cur += $bytes.Length
+    }
+    foreach ($e in $entryData) { $bw.Write($e[1]) }
+    $bw.Close(); $fs.Close()
+    Write-Host "==> expanded $IcoPath to $($sizes.Count) frames (16..256)"
+  } catch {
+    Write-Host "==> could not expand icon: $($_.Exception.Message)" -ForegroundColor Yellow
+  }
+}
 $kitRoot = Split-Path -Parent $PSScriptRoot
 
 # --- locate project root (cwd with pubspec, or app/ subdir) ---
@@ -118,6 +170,13 @@ try {
   }
   if ($LASTEXITCODE -ne 0) { throw "icon generation failed (exit $LASTEXITCODE)" }
   Remove-Item $flic -Force
+
+  # flutter_launcher_icons writes a single-frame .ico; expand it to a
+  # multi-size ico (16..256) so small icons stay crisp on Windows
+  $icoPath = Join-Path $proj "windows\runner\resources\app_icon.ico"
+  if (Test-Path $icoPath) {
+    Expand-Icon -IcoPath $icoPath -SourcePng (Join-Path $proj $logo)
+  }
   Write-Host "==> icons regenerated"
 } finally {
   Pop-Location
