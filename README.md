@@ -63,6 +63,8 @@ release-kit publish android -Obfuscate -p /path/to/myapp
 
 All flags combine with `-p <project-root>`.
 
+> **All platforms** also accept `--no-icons` to skip auto icon generation (e.g. when your project's Dart SDK can't resolve `flutter_launcher_icons` yet): `release-kit publish windows --no-icons`.
+
 ## Layout
 
 ```

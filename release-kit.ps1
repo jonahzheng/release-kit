@@ -52,8 +52,13 @@ try {
       if ($argsList.Count -lt 1) { Show-Usage }
       $platform = $argsList[0]
       $rest = @()
-      if ($argsList.Count -gt 1) { $rest = $argsList[1..($argsList.Count - 1)] }
-      & (Join-Path $kitRoot "scripts\generate_icons.ps1")
+      $skipIcons = $false
+      if ($argsList.Count -gt 1) {
+        for ($i = 1; $i -lt $argsList.Count; $i++) {
+          if ($argsList[$i] -eq "--no-icons") { $skipIcons = $true } else { $rest += $argsList[$i] }
+        }
+      }
+      if (-not $skipIcons) { & (Join-Path $kitRoot "scripts\generate_icons.ps1") }
       switch ($platform) {
         "windows" { & (Join-Path $kitRoot "scripts\publish_windows.ps1") @rest }
         "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }

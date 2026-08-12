@@ -82,8 +82,22 @@ case "$cmd" in
   publish)
     platform="$1"; shift || usage
     cd "$ROOT"
-    # regenerate launcher icons from app.logo (if configured)
-    "$KIT_ROOT/scripts/generate_icons.sh"
+    # strip --no-icons and regenerate launcher icons from app.logo (if configured)
+    NO_ICONS=0
+    KEEP=""
+    for a in "$@"; do
+      case "$a" in
+        --no-icons) NO_ICONS=1 ;;
+        *) KEEP="$KEEP $a" ;;
+      esac
+    done
+    # shellcheck disable=SC2086
+    set -- $KEEP
+    if [ "$NO_ICONS" = "0" ]; then
+      "$KIT_ROOT/scripts/generate_icons.sh"
+    else
+      echo "==> --no-icons: skipping icon generation"
+    fi
     case "$platform" in
       windows) powershell -ExecutionPolicy Bypass -File "$KIT_ROOT/scripts/publish_windows.ps1" "$@" ;;
       android) exec "$KIT_ROOT/scripts/publish_android.sh" "$@" ;;

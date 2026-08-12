@@ -63,6 +63,8 @@ release-kit publish android -Obfuscate -p /path/to/myapp
 
 所有参数均可与 `-p <项目根>` 组合使用。
 
+> **所有平台**均可加 `--no-icons` 跳过自动图标生成（例如项目 Dart SDK 暂无法解析 `flutter_launcher_icons` 时）：`release-kit publish windows --no-icons`。
+
 ## 目录
 
 ```
