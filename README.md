@@ -65,6 +65,12 @@ docs/RELEASE.md           # usage docs
 README.md / README.zh.md  # English / 简体中文
 ```
 
+## Support
+
+Like this project? Sponsor me on GitHub:
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-GitHub?logo=github&style=for-the-badge&color=ea4aaa)](https://github.com/sponsors/jonahzheng)
+
 ## License
 
 MIT

@@ -65,6 +65,12 @@ docs/RELEASE.md           # 使用文档
 README.md / README.zh.md  # English / 简体中文
 ```
 
+## 支持
+
+觉得有用？在 GitHub 上赞助我吧：
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-GitHub?logo=github&style=for-the-badge&color=ea4aaa)](https://github.com/sponsors/jonahzheng)
+
 ## License
 
 MIT
