@@ -6,7 +6,8 @@
 # --- App info ---
 app.name: myapp
 app.bundleId: com.example.myapp
-app.logo: assets/logo.png   # (optional) single source image -> auto-generates all platform icons on publish
+# (optional) single source image -> auto-generates all platform icons on publish
+app.logo: assets/logo.png
 
 # --- Build-time defines (injected via --dart-define) ---
 build.dartDefine.SERVER_URL: https://api.example.com

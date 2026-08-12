@@ -32,7 +32,10 @@ function Get-Cfg($key) {
     $t = $line.Trim()
     if ($t -eq "" -or $t.StartsWith("#")) { continue }
     if ($t.StartsWith("${key}:")) {
-      return ($t.Substring($key.Length + 1).Trim())
+      $v = $t.Substring($key.Length + 1).Trim()
+      $idx = $v.IndexOf(" #")
+      if ($idx -ge 0) { $v = $v.Substring(0, $idx).Trim() }
+      return $v
     }
   }
   return ""

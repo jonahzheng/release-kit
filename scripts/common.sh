@@ -50,6 +50,8 @@ cfg_get() {
     case "$line" in
       "$key":*)
         value="${line#"$key":}"
+        # strip trailing inline comment (" #...")
+        value=$(echo "$value" | sed 's/[[:space:]]*#.*$//')
         # trim leading/trailing spaces
         value=$(echo "$value" | sed 's/^[[:space:]]*//; s/[[:space:]]*$//')
         echo "$value"
