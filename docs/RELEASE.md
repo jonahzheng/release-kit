@@ -6,9 +6,7 @@
 
 ```bash
 release-kit init                       # 一键初始化（生成配置 + 安装 hook）
-release-kit install                    # 仅安装 hook
 release-kit publish <platform> [args]  # 打包（可加 -p <项目根> 从任意目录运行）
-release-kit bump [--build-only]        # 手动递增版本
 ```
 
 配置文件放在**项目内**，解析优先级：
@@ -17,10 +15,11 @@ release-kit bump [--build-only]        # 手动递增版本
 2. `<项目>/config.yaml`
 3. 工具默认 `config.yaml`
 
-所有命令默认作用于当前目录。用 `-p <项目根>` 可从任意目录指向其他项目：
+两个命令默认作用于当前目录。加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
 
 ```bash
-# 在任意目录直接打包另一个项目
+# 在任意目录直接操作另一个项目
+release-kit init -p /path/to/myapp
 release-kit publish android -p /path/to/myapp
 release-kit publish windows -Obfuscate -p /path/to/myapp
 ```
@@ -48,18 +47,18 @@ build 号（`+N`）每次提交 +1。
 ### 手动调用
 
 ```bash
-release-kit bump                # 智能递增 + build+1
-release-kit bump --build-only   # 仅 build+1（发布锁定）
+# 直接运行 Dart 脚本（release-kit 已精简为 init + publish，手动递增走这里）
+dart run bin/bump_version.dart                # 智能递增 + build+1
+dart run bin/bump_version.dart --build-only   # 仅 build+1（发布锁定）
 ```
 
 ### hook 安装
 
 ```bash
-release-kit install
-# 或 init（生成配置 + 安装 hook，一步完成）
+release-kit init
 ```
 
-效果：`git config core.hooksPath` 指向项目 `.githooks`，每次 `git commit` 自动递增并 stage。
+效果：复制 `release-kit.yaml` 模板 + `git config core.hooksPath` 指向项目 `.githooks`，每次 `git commit` 自动递增并 stage。
 
 跳过递增（发布锁定版本）：`git commit --no-verify`。
 
@@ -121,6 +120,6 @@ release-kit publish android [--apk] [--aab] [--skip-build]
 | 现象 | 原因 | 解决 |
 |---|---|---|
 | hook 报 `version: line not found` | pubspec 无 `version:` 行 | 在 pubspec 添加 `version: 0.1.0+1` |
-| hook 不生效 | `core.hooksPath` 未配置 | 重跑 `release-kit install` |
+| hook 不生效 | `core.hooksPath` 未配置 | 重跑 `release-kit init` |
 | Windows 打包 DLL_NOT_FOUND | 加固改名后导入表未补丁 | 用最新脚本重跑（自动补丁） |
 | Android 打包签名失败 | keystore 密码未传 | 设置 `ANDROID_KEY_PASSWORD` 等环境变量 |

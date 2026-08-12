@@ -52,10 +52,14 @@ cd /path/to/myapp
 | Command | Description |
 |---|---|
 | `release-kit init` | copy `release-kit.yaml` template + install hook (one step) |
-| `release-kit install` | install the pre-commit hook only |
 | `release-kit publish <platform>` | build & package (windows / android / macos / linux / ios) |
-| `release-kit publish <platform> -p <project-root>` | same, but target another project from anywhere |
-| `release-kit bump [--build-only]` | manually bump the pubspec version |
+
+Both commands target the current directory. Add `-p <project-root>` (anywhere in the args) to target another project from any directory:
+
+```bash
+release-kit init -p /path/to/myapp
+release-kit publish android -Obfuscate -p /path/to/myapp
+```
 
 ## Layout
 

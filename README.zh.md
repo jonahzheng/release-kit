@@ -52,10 +52,14 @@ cd /path/to/myapp
 | 命令 | 说明 |
 |---|---|
 | `release-kit init` | 生成 `release-kit.yaml` 模板 + 安装 hook（一步完成） |
-| `release-kit install` | 仅安装 pre-commit hook |
 | `release-kit publish <platform>` | 打包（windows / android / macos / linux / ios） |
-| `release-kit publish <platform> -p <项目根>` | 从任意目录打包指定项目 |
-| `release-kit bump [--build-only]` | 手动递增 pubspec 版本 |
+
+两个命令默认作用于当前目录。加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
+
+```bash
+release-kit init -p /path/to/myapp
+release-kit publish android -Obfuscate -p /path/to/myapp
+```
 
 ## 目录
 

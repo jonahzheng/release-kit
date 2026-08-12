@@ -1,13 +1,11 @@
 #!/bin/sh
 # release-kit: unified CLI entry (macOS/Linux)
 # Usage:
-#   ./release-kit.sh init                       # copy config template + install hook
-#   ./release-kit.sh install                    # install hook only
-#   ./release-kit.sh publish <platform> [args]  # windows|android|macos|linux|ios
-#   ./release-kit.sh bump [--build-only]        # manually bump version
+#   ./release-kit.sh init [-p <project-root>]                       # copy config template + install hook
+#   ./release-kit.sh publish <platform> [args] [-p <project-root>]  # windows|android|macos|linux|ios
 #
-# All commands run against the current directory. To target another project
-# from anywhere, pass -p <project-root> to publish/install.
+# All commands run against the current directory. Pass -p <project-root>
+# (anywhere in the args) to target another project from any directory.
 set -e
 
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
@@ -17,16 +15,15 @@ usage() {
 release-kit <command>
 
   init                        copy config template (release-kit.yaml) + install hook
-  install                     install version-bump pre-commit hook
   publish <platform> [args]   build & package (windows|android|macos|linux|ios)
-                              optional: -p <project-root> to target another project
-  bump [--build-only]         manually bump pubspec version
+
+  -p <project-root>           optional, any command: target another project from anywhere
 EOF
   exit 1
 }
 
 # strip -p/--project out of "$@" and print the remaining args
-# (PROJECT_ARG is set as a side effect)
+# (project path is written to a temp file; read via cat "$PROJECT_TMP")
 extract_project() {
   PROJECT_ARG=""
   KEEP=""
@@ -38,12 +35,29 @@ extract_project() {
       *) KEEP="$KEEP $1"; shift ;;
     esac
   done
+  printf '%s' "$PROJECT_ARG" > "$PROJECT_TMP"
   echo "$KEEP"
 }
 
 cmd="$1"; shift || true
+
+# extract -p first so every command supports it
+PROJECT_TMP="${TMPDIR:-/tmp}/release-kit-proj.$$"
+trap 'rm -f "$PROJECT_TMP"' EXIT
+# shellcheck disable=SC2046
+set -- $(extract_project "$@")
+PROJECT_ARG=$(cat "$PROJECT_TMP")
+rm -f "$PROJECT_TMP"
+
+# validate project root early (before touching the filesystem)
+if [ -n "$PROJECT_ARG" ] && [ ! -d "$PROJECT_ARG" ]; then
+  echo "project root not found: $PROJECT_ARG" >&2
+  exit 1
+fi
+
 case "$cmd" in
   init)
+    if [ -n "$PROJECT_ARG" ]; then cd "$PROJECT_ARG"; fi
     cfg="release-kit.yaml"
     if [ ! -f "$cfg" ]; then
       cp "$KIT_ROOT/config.yaml" "$cfg"
@@ -51,15 +65,10 @@ case "$cmd" in
     else
       echo "==> $cfg already exists, keeping it"
     fi
-    exec "$KIT_ROOT/scripts/install_hook.sh" "$@"
-    ;;
-  install)
-    exec "$KIT_ROOT/scripts/install_hook.sh" "$@"
+    exec "$KIT_ROOT/scripts/install_hook.sh"
     ;;
   publish)
     platform="$1"; shift || usage
-    # shellcheck disable=SC2046
-    set -- $(extract_project "$@")
     if [ -n "$PROJECT_ARG" ]; then
       cd "$PROJECT_ARG" || { echo "cannot cd to $PROJECT_ARG" >&2; exit 1; }
     fi
@@ -71,9 +80,6 @@ case "$cmd" in
       ios)     exec "$KIT_ROOT/scripts/publish_ios.sh" "$@" ;;
       *) echo "unknown platform: $platform" >&2; usage ;;
     esac
-    ;;
-  bump)
-    exec dart run "$KIT_ROOT/bin/bump_version.dart" "$@"
     ;;
   *) usage ;;
 esac

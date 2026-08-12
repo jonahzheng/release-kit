@@ -1,12 +1,10 @@
 # release-kit: unified CLI entry (Windows)
 # Usage:
-#   .\release-kit.ps1 init                      # copy config template + install hook
-#   .\release-kit.ps1 install                   # install hook only
-#   .\release-kit.ps1 publish <platform> [args] # windows|android|macos|linux|ios
-#   .\release-kit.ps1 bump [--build-only]       # manually bump version
+#   .\release-kit.ps1 init [-p <project-root>]                       # copy config template + install hook
+#   .\release-kit.ps1 publish <platform> [args] [-p <project-root>]  # windows|android|macos|linux|ios
 #
-# All commands run against the current directory. To target another project
-# from anywhere, pass -p <project-root> to publish.
+# All commands run against the current directory. Pass -p <project-root>
+# (anywhere in the args) to target another project from any directory.
 
 param(
   [Parameter(Position = 0)][string]$Command = "",
@@ -21,50 +19,53 @@ function Show-Usage {
 release-kit <command>
 
   init                        copy config template (release-kit.yaml) + install hook
-  install                     install version-bump pre-commit hook
   publish <platform> [args]   build & package (windows|android|macos|linux|ios)
-                              optional: -p <project-root> to target another project
-  bump [--build-only]         manually bump pubspec version
+
+  -p <project-root>           optional, any command: target another project from anywhere
 "@ | Write-Host
   exit 1
 }
 
+function Extract-Project {
+  param([string[]]$ArgsList)
+  $script:ProjectArg = ""
+  $rest = @()
+  for ($i = 0; $i -lt $ArgsList.Count; $i++) {
+    if (($ArgsList[$i] -eq "-p" -or $ArgsList[$i] -eq "--project") -and $i + 1 -lt $ArgsList.Count) {
+      $script:ProjectArg = $ArgsList[$i + 1]; $i++
+    } else {
+      $rest += $ArgsList[$i]
+    }
+  }
+  return $rest
+}
+
 if (-not $Command) { Show-Usage }
 $argsList = @($RemainingArgs)
+$argsList = @(Extract-Project -ArgsList $argsList)
 
-switch ($Command) {
-  "init" {
-    $cfg = Join-Path (Get-Location) "release-kit.yaml"
-    if (-not (Test-Path $cfg)) {
-      Copy-Item (Join-Path $kitRoot "config.yaml") $cfg
-      Write-Host "==> created $cfg (edit it to match your app)"
-    } else {
-      Write-Host "==> $cfg already exists, keeping it"
-    }
-    & (Join-Path $kitRoot "scripts\install_hook.ps1") @argsList
-    break
-  }
-  "install" {
-    & (Join-Path $kitRoot "scripts\install_hook.ps1") @argsList
-    break
-  }
-  "publish" {
-    if ($argsList.Count -lt 1) { Show-Usage }
-    $platform = $argsList[0]
-    $project = ""
-    $rest = @()
-    for ($i = 1; $i -lt $argsList.Count; $i++) {
-      if ($argsList[$i] -eq "-p" -and $i + 1 -lt $argsList.Count) {
-        $project = $argsList[$i + 1]; $i++
+if ($ProjectArg) {
+  if (-not (Test-Path $ProjectArg)) { throw "Project root not found: $ProjectArg" }
+  Push-Location $ProjectArg
+}
+try {
+  switch ($Command) {
+    "init" {
+      $cfg = Join-Path (Get-Location) "release-kit.yaml"
+      if (-not (Test-Path $cfg)) {
+        Copy-Item (Join-Path $kitRoot "config.yaml") $cfg
+        Write-Host "==> created $cfg (edit it to match your app)"
       } else {
-        $rest += $argsList[$i]
+        Write-Host "==> $cfg already exists, keeping it"
       }
+      & (Join-Path $kitRoot "scripts\install_hook.ps1")
+      break
     }
-    if ($project) {
-      if (-not (Test-Path $project)) { throw "Project root not found: $project" }
-      Push-Location $project
-    }
-    try {
+    "publish" {
+      if ($argsList.Count -lt 1) { Show-Usage }
+      $platform = $argsList[0]
+      $rest = @()
+      if ($argsList.Count -gt 1) { $rest = $argsList[1..($argsList.Count - 1)] }
       switch ($platform) {
         "windows" { & (Join-Path $kitRoot "scripts\publish_windows.ps1") @rest }
         "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }
@@ -73,14 +74,10 @@ switch ($Command) {
         "ios"     { & (Join-Path $kitRoot "scripts\publish_ios.sh") @rest }
         default   { Write-Host "unknown platform: $platform" -ForegroundColor Red; Show-Usage }
       }
-    } finally {
-      if ($project) { Pop-Location }
+      break
     }
-    break
+    default { Show-Usage }
   }
-  "bump" {
-    & dart run (Join-Path $kitRoot "bin\bump_version.dart") @argsList
-    break
-  }
-  default { Show-Usage }
+} finally {
+  if ($ProjectArg) { Pop-Location }
 }
