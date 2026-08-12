@@ -4,6 +4,8 @@
 
 Flutter 发布工具库：**版本号自动管理** + **多平台打包**，统一配置入口，可复用给任意 Flutter 项目。
 
+## 特性
+
 - `git commit` 自动递增版本（智能判定 major/minor/patch + build）
 - 一份扁平配置（`release-kit.yaml`）供所有平台脚本共用
 - 一条命令打包 Windows / Android / macOS / Linux / iOS
@@ -19,10 +21,6 @@ tools/release-kit/release-kit.sh init             # 3. 一键初始化：配置 
 tools/release-kit/release-kit.sh publish android  # 4. 一条命令打包
 ```
 
-- 配置放在**你的项目**里（`release-kit.yaml`），`init` 后编辑即可。
-- `git commit` 自动递增 `pubspec.yaml`（`--no-verify` 跳过）。
-- 产物输出到 `dist/<app>-<version>-<platform>`。
-
 Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
 
 ```powershell
@@ -30,21 +28,26 @@ Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
 .\tools\release-kit\release-kit.ps1 publish windows -Obfuscate
 ```
 
-### 命令一览
+`init` 后编辑项目里的 `release-kit.yaml`。然后：
+
+- `git commit` 自动递增 `pubspec.yaml`（`--no-verify` 跳过）
+- 产物输出到 `dist/<app>-<version>-<platform>`
+
+## 命令一览
 
 | 命令 | 说明 |
 |---|---|
 | `release-kit init` | 生成 `release-kit.yaml` 模板 + 安装 hook（一步完成） |
 | `release-kit publish <platform>` | 打包（windows / android / macos / linux / ios） |
 
-两个命令默认作用于当前目录。加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
+命令默认作用于当前目录。加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
 
 ```bash
 release-kit init -p /path/to/myapp
 release-kit publish android -Obfuscate -p /path/to/myapp
 ```
 
-### 平台参数
+## 平台参数
 
 | 平台 | 参数 | 说明 |
 |---|---|---|
@@ -58,7 +61,7 @@ release-kit publish android -Obfuscate -p /path/to/myapp
 | | `--appimage` | 额外构建 AppImage（需 `linuxdeploy` 在 PATH 中） |
 | macos / ios | `--skip-build` | 复用已有产物，只打包 |
 
-以上参数均可与 `-p <项目根>` 组合使用（参数任意位置）。
+所有参数均可与 `-p <项目根>` 组合使用。
 
 ## 目录
 
