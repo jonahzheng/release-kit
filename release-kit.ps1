@@ -8,6 +8,7 @@
 
 param(
   [Parameter(Position = 0)][string]$Command = "",
+  [Alias("project")][string]$p = "",
   [Parameter(ValueFromRemainingArguments = $true)]$RemainingArgs
 )
 
@@ -26,23 +27,9 @@ release-kit <command>
   exit 1
 }
 
-function Extract-Project {
-  param([string[]]$ArgsList)
-  $script:ProjectArg = ""
-  $rest = @()
-  for ($i = 0; $i -lt $ArgsList.Count; $i++) {
-    if (($ArgsList[$i] -eq "-p" -or $ArgsList[$i] -eq "--project") -and $i + 1 -lt $ArgsList.Count) {
-      $script:ProjectArg = $ArgsList[$i + 1]; $i++
-    } else {
-      $rest += $ArgsList[$i]
-    }
-  }
-  return $rest
-}
-
 if (-not $Command) { Show-Usage }
+$ProjectArg = $p
 $argsList = @($RemainingArgs)
-$argsList = @(Extract-Project -ArgsList $argsList)
 
 if ($ProjectArg) {
   if (-not (Test-Path $ProjectArg)) { throw "Project root not found: $ProjectArg" }
