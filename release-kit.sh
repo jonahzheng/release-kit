@@ -82,6 +82,8 @@ case "$cmd" in
   publish)
     platform="$1"; shift || usage
     cd "$ROOT"
+    # regenerate launcher icons from app.logo (if configured)
+    "$KIT_ROOT/scripts/generate_icons.sh"
     case "$platform" in
       windows) powershell -ExecutionPolicy Bypass -File "$KIT_ROOT/scripts/publish_windows.ps1" "$@" ;;
       android) exec "$KIT_ROOT/scripts/publish_android.sh" "$@" ;;

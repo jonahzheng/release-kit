@@ -16,6 +16,7 @@ Flutter release toolkit: **automatic version management** + **multi-platform pac
   - Windows: zip + optional hardening rename (engine DLL rename + import table patch)
   - Android: APK + AAB
   - macOS / iOS / Linux: skeleton scripts
+- **Auto-generated icons**: set `app.logo` in your config with a single source image; `publish` regenerates Android / iOS / macOS / Windows launcher icons via `flutter_launcher_icons`
 
 ## Quick Start
 

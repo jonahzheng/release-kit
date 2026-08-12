@@ -72,6 +72,7 @@ release-kit init
 |---|---|
 | `app.name` | 应用名（zip/产物命名） |
 | `app.bundleId` | Android 包名 / iOS bundle id |
+| `app.logo` | 启动图标源图（可选，`publish` 时自动生成各平台 icon） |
 | `build.dartDefine.*` | `--dart-define` 注入项 |
 | `output.dir` | 产物输出目录（默认 `dist`） |
 | `hardening.enabled` | Windows 加固改名开关（默认 false） |
@@ -81,6 +82,23 @@ release-kit init
 | `android.keyAlias` | keystore 别名 |
 
 密钥密码走环境变量，不入库：`ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`。
+
+### 启动图标自动生成
+
+在配置中设置 `app.logo`（一张源图，建议 ≥1024×1024 PNG）：
+
+```yaml
+app.logo: assets/logo.png
+```
+
+每次 `release-kit publish <platform>` 都会先调用 `scripts/generate_icons.sh`（Windows 用 `.ps1`），基于 `flutter_launcher_icons` 自动生成：
+
+- Android：`android/app/src/main/res/mipmap-*/ic_launcher.png`
+- iOS：`ios/Runner/Assets.xcassets/AppIcon.appiconset/`
+- macOS：`macos/Runner/Assets.xcassets/AppIcon.appiconset/`
+- Windows：`windows/runner/resources/app_icon.ico`
+
+未设置 `app.logo` 时跳过；源图缺失时报错提示。首次使用会自动添加 `flutter_launcher_icons` 到 dev_dependencies。
 
 ## 三、打包
 

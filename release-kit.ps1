@@ -66,6 +66,7 @@ try {
       $platform = $argsList[0]
       $rest = @()
       if ($argsList.Count -gt 1) { $rest = $argsList[1..($argsList.Count - 1)] }
+      & (Join-Path $kitRoot "scripts\generate_icons.ps1")
       switch ($platform) {
         "windows" { & (Join-Path $kitRoot "scripts\publish_windows.ps1") @rest }
         "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }

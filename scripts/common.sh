@@ -31,6 +31,7 @@ cfg_file() {
 
 # --- parse config.yaml (flat key: value, dot-namespace) ---
 # usage: cfg_get <key> [<config-file>]  -> echoes value (or empty)
+# Always returns 0 so that `set -e` scripts can safely do: V=$(cfg_get ...)
 cfg_get() {
   local key="$1" line value cfg
   if [ -n "$2" ]; then
@@ -38,7 +39,9 @@ cfg_get() {
   else
     cfg=$(cfg_file "$PROJECT_ROOT")
   fi
-  [ -n "$cfg" ] || return 1
+  if [ -z "$cfg" ] || [ ! -f "$cfg" ]; then
+    return 0
+  fi
   while IFS= read -r line; do
     # strip comments and blanks
     case "$line" in
@@ -54,7 +57,7 @@ cfg_get() {
         ;;
     esac
   done < "$cfg"
-  return 1
+  return 0
 }
 
 # --- resolve app dir (project root of the consuming app) ---

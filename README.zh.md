@@ -16,6 +16,7 @@ Flutter 发布工具库：**版本号自动管理** + **多平台打包**，统�
   - Windows：zip + 可选加固改名（引擎 DLL 改名 + 导入表补丁）
   - Android：APK + AAB
   - macOS / iOS / Linux：骨架脚本
+- **自动生成图标**：配置 `app.logo` 一张源图，`publish` 时自动用 `flutter_launcher_icons` 生成 Android / iOS / macOS / Windows 各平台启动图标
 
 ## 快速开始
 
