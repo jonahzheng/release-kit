@@ -4,13 +4,24 @@
 # Reads `app.logo` from the resolved config (release-kit.yaml > config.yaml
 # > tool default). If unset or the file is missing, prints a warning and
 # exits 0 (icons are optional). Otherwise drives flutter_launcher_icons to
-# regenerate Android / iOS / macOS / Windows icons.
+# regenerate icons for the target platform only (or all, if none given).
 #
-# Usage: ./generate_icons.sh [-p <project-root>]  (or run from project root)
+# Usage: ./generate_icons.sh [-p <platform>]  (windows|android|ios|macos|linux|all)
 set -e
 
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 . "$KIT_ROOT/scripts/common.sh"
+
+PLATFORM="all"
+while [ $# -gt 0 ]; do
+  case "$1" in
+    -p) PLATFORM="$2"; shift 2 ;;
+    *) echo "usage: $0 [-p <platform>]" >&2; exit 2 ;;
+  esac
+done
+case "$PLATFORM" in
+  linux) echo "==> flutter_launcher_icons has no Linux icon targets - skipping"; exit 0 ;;
+esac
 
 PROJECT_ROOT=$(resolve_project)
 CONFIG_FILE=$(cfg_file "$PROJECT_ROOT")
@@ -46,21 +57,34 @@ TOP_KEY="flutter_launcher_icons"
 case "$VER" in
   0.1[01]*) TOP_KEY="flutter_icons" ;;
 esac
-echo "==> flutter_launcher_icons $VER (config key: $TOP_KEY)"
+echo "==> flutter_launcher_icons $VER (config key: $TOP_KEY)  target: $PLATFORM"
 
-cat > "$FLIC" <<EOF
-$TOP_KEY:
-  android: true
-  ios: true
-  image_path: "$LOGO"
-  windows:
-    generate: true
-    image_path: "$LOGO"
-    icon_size: 256
-  macos:
-    generate: true
-    image_path: "$LOGO"
-EOF
+# build config for the target platform only
+{
+  echo "$TOP_KEY:"
+  if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "android" ]; then
+    echo "  android: true"
+  else
+    echo "  android: false"
+  fi
+  if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "ios" ]; then
+    echo "  ios: true"
+  else
+    echo "  ios: false"
+  fi
+  echo "  image_path: \"$LOGO\""
+  if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "windows" ]; then
+    echo "  windows:"
+    echo "    generate: true"
+    echo "    image_path: \"$LOGO\""
+    echo "    icon_size: 256"
+  fi
+  if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "macos" ]; then
+    echo "  macos:"
+    echo "    generate: true"
+    echo "    image_path: \"$LOGO\""
+  fi
+} > "$FLIC"
 
 echo "==> generating icons from $LOGO ..."
 dart run flutter_launcher_icons -f "$FLIC"

@@ -94,7 +94,7 @@ case "$cmd" in
     # shellcheck disable=SC2086
     set -- $KEEP
     if [ "$NO_ICONS" = "0" ]; then
-      "$KIT_ROOT/scripts/generate_icons.sh"
+      "$KIT_ROOT/scripts/generate_icons.sh" -p "$platform"
     else
       echo "==> --no-icons: skipping icon generation"
     fi

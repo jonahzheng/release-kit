@@ -63,7 +63,7 @@ try {
           if ($argsList[$i] -eq "--no-icons") { $skipIcons = $true } else { $rest += $argsList[$i] }
         }
       }
-      if (-not $skipIcons) { & (Join-Path $kitRoot "scripts\generate_icons.ps1") }
+      if (-not $skipIcons) { & (Join-Path $kitRoot "scripts\generate_icons.ps1") -Platform $platform }
       switch ($platform) {
         "windows" {
           # publish_windows.ps1 takes switch params; pass them explicitly so a

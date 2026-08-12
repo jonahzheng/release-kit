@@ -3,9 +3,13 @@
 # Reads `app.logo` from the resolved config (release-kit.yaml > config.yaml
 # > kit default). If unset or the file is missing, warns and continues
 # (icons are optional). Otherwise drives flutter_launcher_icons to
-# regenerate Android / iOS / macOS / Windows icons.
+# regenerate icons for the target platform only (or all, if none given).
 #
-# Usage: .\generate_icons.ps1  (run from the project root)
+# Usage: .\generate_icons.ps1 [-Platform windows|android|ios|macos|linux|all]
+
+param(
+  [string]$Platform = ""
+)
 
 $ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
@@ -143,20 +147,37 @@ try {
   if ($ver -and [version]$ver -lt [version]"0.12.0") { $topKey = "flutter_icons" }
   Write-Host "==> flutter_launcher_icons $ver (config key: $topKey)"
 
+  # normalize target platform ("" -> all)
+  $p = if ($Platform) { $Platform.ToLower() } else { "all" }
+  if ($p -eq "linux") {
+    Write-Host "==> flutter_launcher_icons has no Linux icon targets - skipping"
+    exit 0
+  }
+
   $flic = "flutter_launcher_icons.yaml"
-  $cfgText = "$topKey`:`n" + @"
-  android: true
-  ios: true
-  image_path: "$logo"
-  windows:
-    generate: true
-    image_path: "$logo"
-    icon_size: 256
-  macos:
-    generate: true
-    image_path: "$logo"
-"@
+  $sb = New-Object System.Text.StringBuilder
+  [void]$sb.Append("$topKey`:`n")
+  # android / ios are enabled with true/false; windows / macos need a block
+  if ($p -eq "all" -or $p -eq "android") {
+    [void]$sb.Append("  android: true`n")
+  } else {
+    [void]$sb.Append("  android: false`n")
+  }
+  if ($p -eq "all" -or $p -eq "ios") {
+    [void]$sb.Append("  ios: true`n")
+  } else {
+    [void]$sb.Append("  ios: false`n")
+  }
+  [void]$sb.Append("  image_path: `"$logo`"`n")
+  if ($p -eq "all" -or $p -eq "windows") {
+    [void]$sb.Append("  windows:`n    generate: true`n    image_path: `"$logo`"`n    icon_size: 256`n")
+  }
+  if ($p -eq "all" -or $p -eq "macos") {
+    [void]$sb.Append("  macos:`n    generate: true`n    image_path: `"$logo`"`n")
+  }
+  $cfgText = $sb.ToString()
   [System.IO.File]::WriteAllText((Join-Path $proj $flic), $cfgText, (New-Object System.Text.UTF8Encoding($false)))
+  Write-Host "==> target platform: $p"
 
   Write-Host "==> generating icons from $logo ..."
   # redirect stderr so flutter_launcher_icons' "skipped" warnings don't
@@ -173,9 +194,11 @@ try {
 
   # flutter_launcher_icons writes a single-frame .ico; expand it to a
   # multi-size ico (16..256) so small icons stay crisp on Windows
-  $icoPath = Join-Path $proj "windows\runner\resources\app_icon.ico"
-  if (Test-Path $icoPath) {
-    Expand-Icon -IcoPath $icoPath -SourcePng (Join-Path $proj $logo)
+  if ($p -eq "all" -or $p -eq "windows") {
+    $icoPath = Join-Path $proj "windows\runner\resources\app_icon.ico"
+    if (Test-Path $icoPath) {
+      Expand-Icon -IcoPath $icoPath -SourcePng (Join-Path $proj $logo)
+    }
   }
   Write-Host "==> icons regenerated"
 } finally {
