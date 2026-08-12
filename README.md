@@ -10,7 +10,8 @@ Flutter release toolkit: **automatic version management** + **multi-platform pac
   - Analyzes staged changes to decide the bump: deleted source → major, added/major changes → minor, minor changes → patch, build +1
   - Supports both monorepo (`app/` subdirectory) and standalone project (root directory) layouts
   - `git commit --no-verify` skips the bump (release freeze)
-- **Unified config**: a single `config.yaml` shared by Windows/Android/Linux/macOS/iOS scripts
+- **Unified config**: one flat config file shared by Windows/Android/Linux/macOS/iOS scripts
+  - Resolution: `<project>/release-kit.yaml` → `<project>/config.yaml` → tool default
 - **Multi-platform packaging**: `scripts/publish_*.sh` / `publish_windows.ps1`
   - Windows: zip + optional hardening rename (engine DLL rename + import table patch)
   - Android: APK + AAB

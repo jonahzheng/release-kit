@@ -10,7 +10,8 @@ Flutter 发布工具库：**版本号自动管理** + **多平台打包**，统�
   - 分析暂存代码变更智能判定：删源码→major、新增/大改→minor、小改→patch、build +1
   - 支持单仓库（`app/` 子目录）与独立项目（根目录）两种结构
   - `git commit --no-verify` 跳过递增（发布锁定）
-- **统一配置**：单一 `config.yaml`，Windows/Android/Linux/macOS/iOS 脚本共用
+- **统一配置**：一份扁平配置，Windows/Android/Linux/macOS/iOS 脚本共用
+  - 解析优先级：`<项目>/release-kit.yaml` → `<项目>/config.yaml` → 工具默认
 - **多平台打包**：`scripts/publish_*.sh` / `publish_windows.ps1`
   - Windows：zip + 可选加固改名（引擎 DLL 改名 + 导入表补丁）
   - Android：APK + AAB
