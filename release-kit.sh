@@ -6,7 +6,8 @@
 #   ./release-kit.sh publish <platform> [args]  # windows|android|macos|linux|ios
 #   ./release-kit.sh bump [--build-only]        # manually bump version
 #
-# Run from the Flutter project root (or app/ subdir in a monorepo).
+# All commands run against the current directory. To target another project
+# from anywhere, pass -p <project-root> to publish/install.
 set -e
 
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
@@ -18,9 +19,26 @@ release-kit <command>
   init                        copy config template (release-kit.yaml) + install hook
   install                     install version-bump pre-commit hook
   publish <platform> [args]   build & package (windows|android|macos|linux|ios)
+                              optional: -p <project-root> to target another project
   bump [--build-only]         manually bump pubspec version
 EOF
   exit 1
+}
+
+# strip -p/--project out of "$@" and print the remaining args
+# (PROJECT_ARG is set as a side effect)
+extract_project() {
+  PROJECT_ARG=""
+  KEEP=""
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      -p|--project)
+        if [ -n "$2" ]; then PROJECT_ARG="$2"; shift 2; else shift; fi
+        ;;
+      *) KEEP="$KEEP $1"; shift ;;
+    esac
+  done
+  echo "$KEEP"
 }
 
 cmd="$1"; shift || true
@@ -40,6 +58,11 @@ case "$cmd" in
     ;;
   publish)
     platform="$1"; shift || usage
+    # shellcheck disable=SC2046
+    set -- $(extract_project "$@")
+    if [ -n "$PROJECT_ARG" ]; then
+      cd "$PROJECT_ARG" || { echo "cannot cd to $PROJECT_ARG" >&2; exit 1; }
+    fi
     case "$platform" in
       windows) powershell -ExecutionPolicy Bypass -File "$KIT_ROOT/scripts/publish_windows.ps1" "$@" ;;
       android) exec "$KIT_ROOT/scripts/publish_android.sh" "$@" ;;

@@ -7,7 +7,7 @@
 ```bash
 release-kit init                       # 一键初始化（生成配置 + 安装 hook）
 release-kit install                    # 仅安装 hook
-release-kit publish <platform> [args]  # 打包
+release-kit publish <platform> [args]  # 打包（可加 -p <项目根> 从任意目录运行）
 release-kit bump [--build-only]        # 手动递增版本
 ```
 
@@ -16,6 +16,14 @@ release-kit bump [--build-only]        # 手动递增版本
 1. `<项目>/release-kit.yaml`（推荐，随项目入库）
 2. `<项目>/config.yaml`
 3. 工具默认 `config.yaml`
+
+所有命令默认作用于当前目录。用 `-p <项目根>` 可从任意目录指向其他项目：
+
+```bash
+# 在任意目录直接打包另一个项目
+release-kit publish android -p /path/to/myapp
+release-kit publish windows -Obfuscate -p /path/to/myapp
+```
 
 ## 一、版本号管理
 

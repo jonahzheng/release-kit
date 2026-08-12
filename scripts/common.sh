@@ -102,12 +102,12 @@ dart_defines() {
   local key value cfg
   cfg=$(cfg_file "$PROJECT_ROOT")
   [ -n "$cfg" ] || return 0
-  while IFS= read -r key; do
+  grep -oE '^build\.dartDefine\.[A-Za-z0-9_]+:' "$cfg" | sed 's/^build.dartDefine.//; s/:$//' | while IFS= read -r key; do
     value=$(cfg_get "build.dartDefine.$key" "$cfg")
     if [ -n "$value" ]; then
       printf '%s' " --dart-define=$key=$value"
     fi
-  done < <(grep -oE '^build\.dartDefine\.[A-Za-z0-9_]+:' "$cfg" | sed 's/^build.dartDefine.//; s/:$//')
+  done
 }
 
 print_artifact() {

@@ -5,7 +5,8 @@
 #   .\release-kit.ps1 publish <platform> [args] # windows|android|macos|linux|ios
 #   .\release-kit.ps1 bump [--build-only]       # manually bump version
 #
-# Run from the Flutter project root (or app/ subdir in a monorepo).
+# All commands run against the current directory. To target another project
+# from anywhere, pass -p <project-root> to publish.
 
 param(
   [Parameter(Position = 0)][string]$Command = "",
@@ -22,6 +23,7 @@ release-kit <command>
   init                        copy config template (release-kit.yaml) + install hook
   install                     install version-bump pre-commit hook
   publish <platform> [args]   build & package (windows|android|macos|linux|ios)
+                              optional: -p <project-root> to target another project
   bump [--build-only]         manually bump pubspec version
 "@ | Write-Host
   exit 1
@@ -49,15 +51,30 @@ switch ($Command) {
   "publish" {
     if ($argsList.Count -lt 1) { Show-Usage }
     $platform = $argsList[0]
+    $project = ""
     $rest = @()
-    if ($argsList.Count -gt 1) { $rest = $argsList[1..($argsList.Count - 1)] }
-    switch ($platform) {
-      "windows" { & (Join-Path $kitRoot "scripts\publish_windows.ps1") @rest }
-      "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }
-      "macos"   { & (Join-Path $kitRoot "scripts\publish_macos.sh") @rest }
-      "linux"   { & (Join-Path $kitRoot "scripts\publish_linux.sh") @rest }
-      "ios"     { & (Join-Path $kitRoot "scripts\publish_ios.sh") @rest }
-      default   { Write-Host "unknown platform: $platform" -ForegroundColor Red; Show-Usage }
+    for ($i = 1; $i -lt $argsList.Count; $i++) {
+      if ($argsList[$i] -eq "-p" -and $i + 1 -lt $argsList.Count) {
+        $project = $argsList[$i + 1]; $i++
+      } else {
+        $rest += $argsList[$i]
+      }
+    }
+    if ($project) {
+      if (-not (Test-Path $project)) { throw "Project root not found: $project" }
+      Push-Location $project
+    }
+    try {
+      switch ($platform) {
+        "windows" { & (Join-Path $kitRoot "scripts\publish_windows.ps1") @rest }
+        "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }
+        "macos"   { & (Join-Path $kitRoot "scripts\publish_macos.sh") @rest }
+        "linux"   { & (Join-Path $kitRoot "scripts\publish_linux.sh") @rest }
+        "ios"     { & (Join-Path $kitRoot "scripts\publish_ios.sh") @rest }
+        default   { Write-Host "unknown platform: $platform" -ForegroundColor Red; Show-Usage }
+      }
+    } finally {
+      if ($project) { Pop-Location }
     }
     break
   }
