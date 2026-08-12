@@ -8,6 +8,8 @@
 # Usage: .\generate_icons.ps1  (run from the project root)
 
 $ErrorActionPreference = "Stop"
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
 $kitRoot = Split-Path -Parent $PSScriptRoot
 
 # --- locate project root (cwd with pubspec, or app/ subdir) ---
@@ -59,9 +61,38 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "flutter pub add failed" }
   }
 
+  # prefer the dart.exe inside the resolved flutter SDK (avoids a stray
+  # standalone dart-sdk shadowing it on PATH, and avoids dart.bat mangling
+  # UTF-8 output in the PowerShell pipeline)
+  function Get-DartCmd {
+    $f = Get-Command flutter -ErrorAction SilentlyContinue
+    if ($f -and $f.Source) {
+      $dir = Split-Path -Parent $f.Source
+      $cached = Join-Path $dir "cache\dart-sdk\bin\dart.exe"
+      if (Test-Path $cached) { return $cached }
+      foreach ($cand in @("$dir\dart.bat", "$dir\dart.exe")) {
+        if (Test-Path $cand) { return $cand }
+      }
+    }
+    return "dart"
+  }
+  $dartCmd = Get-DartCmd
+  Write-Host "==> dart: $dartCmd"
+
+  # top-level key differs by package version: 0.11 uses "flutter_icons",
+  # 0.14+ uses "flutter_launcher_icons". Detect from pubspec.lock.
+  $ver = ""
+  if (Test-Path "pubspec.lock") {
+    $lock = Get-Content "pubspec.lock" -Raw
+    $m = [regex]::Match($lock, "flutter_launcher_icons:\r?\n(?:.*\r?\n)*?.*?version: .([0-9.]+).")
+    if ($m.Success) { $ver = $m.Groups[1].Value }
+  }
+  $topKey = "flutter_launcher_icons"
+  if ($ver -and [version]$ver -lt [version]"0.12.0") { $topKey = "flutter_icons" }
+  Write-Host "==> flutter_launcher_icons $ver (config key: $topKey)"
+
   $flic = "flutter_launcher_icons.yaml"
-  @"
-flutter_launcher_icons:
+  $cfgText = "$topKey`:`n" + @"
   android: true
   ios: true
   image_path: "$logo"
@@ -72,11 +103,20 @@ flutter_launcher_icons:
   macos:
     generate: true
     image_path: "$logo"
-"@ | Set-Content -Path $flic -Encoding UTF8
+"@
+  [System.IO.File]::WriteAllText((Join-Path $proj $flic), $cfgText, (New-Object System.Text.UTF8Encoding($false)))
 
   Write-Host "==> generating icons from $logo ..."
-  dart run flutter_launcher_icons:generate -f $flic
-  if ($LASTEXITCODE -ne 0) { throw "icon generation failed" }
+  # redirect stderr so flutter_launcher_icons' "skipped" warnings don't
+  # trip $ErrorActionPreference=Stop; judge success by exit code only
+  $prevEAP = $ErrorActionPreference
+  $ErrorActionPreference = "Continue"
+  try {
+    & $dartCmd run flutter_launcher_icons -f $flic 2>&1 | ForEach-Object { Write-Host $_ }
+  } finally {
+    $ErrorActionPreference = $prevEAP
+  }
+  if ($LASTEXITCODE -ne 0) { throw "icon generation failed (exit $LASTEXITCODE)" }
   Remove-Item $flic -Force
   Write-Host "==> icons regenerated"
 } finally {

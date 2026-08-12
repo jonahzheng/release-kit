@@ -35,8 +35,21 @@ if ! grep -q 'flutter_launcher_icons' pubspec.yaml; then
 fi
 
 FLIC="flutter_launcher_icons.yaml"
+
+# top-level key differs by package version: 0.11 uses "flutter_icons",
+# 0.14+ uses "flutter_launcher_icons". Detect from pubspec.lock.
+VER=""
+if [ -f pubspec.lock ]; then
+  VER=$(awk '/flutter_launcher_icons:/{f=1} f && /version:/{print; exit}' pubspec.lock | sed 's/.*version: "\([0-9.]*\)".*/\1/')
+fi
+TOP_KEY="flutter_launcher_icons"
+case "$VER" in
+  0.1[01]*) TOP_KEY="flutter_icons" ;;
+esac
+echo "==> flutter_launcher_icons $VER (config key: $TOP_KEY)"
+
 cat > "$FLIC" <<EOF
-flutter_launcher_icons:
+$TOP_KEY:
   android: true
   ios: true
   image_path: "$LOGO"
@@ -50,6 +63,6 @@ flutter_launcher_icons:
 EOF
 
 echo "==> generating icons from $LOGO ..."
-dart run flutter_launcher_icons:generate -f "$FLIC"
+dart run flutter_launcher_icons -f "$FLIC"
 rm -f "$FLIC"
 echo "==> icons regenerated"

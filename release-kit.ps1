@@ -15,6 +15,11 @@ param(
 $ErrorActionPreference = "Stop"
 $kitRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+# decode native-command output (flutter/dart) as UTF-8 so box-drawing and
+# emoji progress characters don't get mangled by the legacy console codepage
+[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+$OutputEncoding = [System.Text.UTF8Encoding]::new($false)
+
 function Show-Usage {
   @"
 release-kit <command>
@@ -60,7 +65,20 @@ try {
       }
       if (-not $skipIcons) { & (Join-Path $kitRoot "scripts\generate_icons.ps1") }
       switch ($platform) {
-        "windows" { & (Join-Path $kitRoot "scripts\publish_windows.ps1") @rest }
+        "windows" {
+          # publish_windows.ps1 takes switch params; pass them explicitly so a
+          # string-array splat can't mis-bind "-Obfuscate" onto $OutputDir
+          $obf = $false; $skp = $false; $nor = $false; $outDir = ""
+          for ($i = 0; $i -lt $rest.Count; $i++) {
+            switch ($rest[$i]) {
+              "-Obfuscate" { $obf = $true }
+              "-SkipBuild" { $skp = $true }
+              "-NoRename"  { $nor = $true }
+              "-OutputDir" { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
+            }
+          }
+          & (Join-Path $kitRoot "scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -OutputDir $outDir
+        }
         "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }
         "macos"   { & (Join-Path $kitRoot "scripts\publish_macos.sh") @rest }
         "linux"   { & (Join-Path $kitRoot "scripts\publish_linux.sh") @rest }
