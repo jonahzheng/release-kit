@@ -4,6 +4,9 @@
 pubspec.lock
 build/
 
+# Local-only planning docs (not pushed to GitHub)
+docs/PUBLISH-PUB-DEV.md
+
 # OS
 Thumbs.db
 .DS_Store

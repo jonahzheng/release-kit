@@ -73,6 +73,62 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 ---
 
+## Version Management
+
+### Bump rules
+
+| Code change | Bump | Example |
+|:---|:---:|:---:|
+| Source file deleted | major | `1.0.0 → 2.0.0` |
+| New source file, or ≥ 40 new source lines | minor | `1.0.0 → 1.1.0` |
+| Other (small edits, docs, config) | patch | `1.1.0 → 1.1.1` |
+
+The build number (`+N`) increments by 1 on every commit.
+
+### Skip a bump
+
+`git commit --no-verify` (release-lock the version).
+
+### Manual bump
+
+```bash
+dart run bin/bump_version.dart                # smart bump + build+1
+dart run bin/bump_version.dart --build-only   # only build+1 (release-lock)
+```
+
+---
+
+## Unified Config
+
+`release-kit init` copies `release-kit.yaml` into your project. One flat `key: value` file (dot-namespace, `#` comments) read by every platform script:
+
+| Key | Description |
+|---|---|
+| `app.name` | app name (artifact naming) |
+| `app.bundleId` | Android package name / iOS bundle id |
+| `app.logo` | launcher icon source image (optional) |
+| `build.dartDefine.*` | injected via `--dart-define` |
+| `output.dir` | artifact output dir (default `dist`) |
+| `hardening.enabled` | Windows hardening rename (default off) |
+| `hardening.engineDll` | new engine DLL name |
+| `hardening.assetDir` | new asset dir name |
+| `android.keystore` | keystore path |
+| `android.keyAlias` | keystore alias |
+
+Keystore passwords come from env vars, never from the config: `ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`.
+
+### Auto launcher icons
+
+Set `app.logo` (one source image, ≥ 1024×1024 PNG recommended):
+
+```yaml
+app.logo: assets/logo.png
+```
+
+Each `release-kit publish <platform>` regenerates the platform's icons via `flutter_launcher_icons` (Android mipmaps, iOS/macOS appicon sets, Windows `.ico`). Skip with `--no-icons`.
+
+---
+
 ## Platform Flags
 
 | Platform | Flags | Description |
@@ -92,6 +148,18 @@ release-kit publish android --obfuscate -p /path/to/myapp
 | **macos / ios** | `--skip-build` | reuse existing outputs, just package |
 
 All flags combine with `-p <project-root>`.
+
+### Android specifics
+
+```bash
+release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
+```
+
+- Default: build + collect **both** APK and AAB
+- `--apk` alone → APK only; `--aab` alone → AAB only; both given → both
+- `--skip-build` → reuse existing Gradle outputs, just collect artifacts
+- Signing: configure the keystore in your project's `android/`, passwords via `ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`
+- Artifacts: `dist/<app>-<version>-android.apk` and `.aab` (+ sha256)
 
 > **Note:** On the Windows entry (`release-kit.ps1`), `-Obfuscate` also works for android (auto-mapped to `--obfuscate`), so the two most common platforms share one spelling: `release-kit publish android -Obfuscate`. Non-Windows shell platforms run via Git Bash.
 
@@ -116,7 +184,7 @@ scripts/
   publish_linux.sh        # Linux packaging
   publish_ios.sh          # iOS packaging
 config.yaml               # default config template
-docs/RELEASE.md           # usage docs
+docs/RELEASE.md           # detailed usage docs
 README.md / README.zh.md  # English / 简体中文
 ```
 

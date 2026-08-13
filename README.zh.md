@@ -73,6 +73,62 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 ---
 
+## 版本号管理
+
+### 递增规则
+
+| 代码变更特征 | 递增 | 示例 |
+|:---|:---:|:---:|
+| 删除源码文件 | major | `1.0.0 → 2.0.0` |
+| 新增源码文件，或源码新增行数 ≥ 40 | minor | `1.0.0 → 1.1.0` |
+| 其他（小改动、文档、配置） | patch | `1.1.0 → 1.1.1` |
+
+build 号（`+N`）每次提交 +1。
+
+### 跳过递增
+
+`git commit --no-verify`（发布锁定版本）。
+
+### 手动递增
+
+```bash
+dart run bin/bump_version.dart                # 智能递增 + build+1
+dart run bin/bump_version.dart --build-only   # 仅 build+1（发布锁定）
+```
+
+---
+
+## 统一配置
+
+`release-kit init` 会把 `release-kit.yaml` 模板复制到项目内。扁平 `key: value`（点号命名空间、`#` 注释），所有打包脚本读取同一份：
+
+| 键 | 说明 |
+|---|---|
+| `app.name` | 应用名（产物命名） |
+| `app.bundleId` | Android 包名 / iOS bundle id |
+| `app.logo` | 启动图标源图（可选） |
+| `build.dartDefine.*` | `--dart-define` 注入项 |
+| `output.dir` | 产物输出目录（默认 `dist`） |
+| `hardening.enabled` | Windows 加固改名开关（默认 false） |
+| `hardening.engineDll` | 引擎 DLL 新名 |
+| `hardening.assetDir` | 资源目录新名 |
+| `android.keystore` | keystore 路径 |
+| `android.keyAlias` | keystore 别名 |
+
+密钥密码走环境变量，不入库：`ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`。
+
+### 启动图标自动生成
+
+配置 `app.logo`（一张源图，建议 ≥1024×1024 PNG）：
+
+```yaml
+app.logo: assets/logo.png
+```
+
+每次 `release-kit publish <platform>` 都会先基于 `flutter_launcher_icons` 自动生成该平台图标（Android mipmap、iOS/macOS appicon、Windows `.ico`）。可用 `--no-icons` 跳过。
+
+---
+
 ## 平台参数
 
 | 平台 | 参数 | 说明 |
@@ -92,6 +148,18 @@ release-kit publish android --obfuscate -p /path/to/myapp
 | **macos / ios** | `--skip-build` | 复用已有产物，只打包 |
 
 所有参数均可与 `-p <项目根>` 组合使用。
+
+### Android 打包说明
+
+```bash
+release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
+```
+
+- 默认构建并收集 **APK + AAB 两者**
+- 单独给 `--apk` → 只打 APK；单独给 `--aab` → 只打 AAB；两者同给 → 都打
+- `--skip-build` → 复用已有 Gradle 产物，只收集
+- 签名：在项目 `android/` 里配置好 keystore，密码走 `ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`
+- 产物：`dist/<app>-<version>-android.apk` 与 `.aab`（+ sha256）
 
 > **注意：** Windows 入口（`release-kit.ps1`）下，`-Obfuscate` 对 android 同样生效（自动映射为 `--obfuscate`），两个最常用平台命令写法统一：`release-kit publish android -Obfuscate`。其他 shell 平台在 Windows 上通过 Git Bash 执行。
 
@@ -116,7 +184,7 @@ scripts/
   publish_linux.sh        # Linux 打包
   publish_ios.sh          # iOS 打包
 config.yaml               # 默认配置模板
-docs/RELEASE.md           # 使用文档
+docs/RELEASE.md           # 详细使用文档
 README.md / README.zh.md  # English / 简体中文
 ```
 
