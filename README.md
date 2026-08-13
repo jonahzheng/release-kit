@@ -20,7 +20,7 @@
 
 ---
 
-> **release-kit** — versions bump automatically on `git commit`, one `release-kit.yaml` drives every platform, one command builds Windows / Android / macOS / Linux / iOS.
+> **release-kit** — a Dart CLI package (on pub.dev) that versions bump automatically on `git commit`, drives every platform from one `release-kit.yaml`, and builds Windows / Android / macOS / Linux / iOS with one command.
 
 > Full usage manual: **[docs/GUIDE.md](docs/GUIDE.md)**
 
@@ -38,19 +38,25 @@
 ## Quick Start
 
 ```bash
-git clone <release-kit-repo> tools/release-kit   # 1. get the tool
-cd /path/to/myapp                                 # 2. your Flutter project
+# 1. install (Dart CLI, from pub.dev)
+dart pub global activate release_kit
 
-tools/release-kit/release-kit.sh init             # 3. one step: config + hook
-tools/release-kit/release-kit.sh publish android  # 4. build & package
+# 2. your Flutter project
+cd /path/to/myapp
+
+# 3. one step: config + hook
+release-kit init
+
+# 4. build & package
+release-kit publish android
 ```
 
-Or install from pub.dev (Dart CLI):
+Alternative — git clone (ship the tool with your repo):
 
 ```bash
-dart pub global activate release_kit
-release-kit init
-release-kit publish android
+git clone <release-kit-repo> tools/release-kit
+tools/release-kit/release-kit.sh init
+tools/release-kit/release-kit.sh publish android
 ```
 
 Windows? Use `release-kit.ps1` instead of `release-kit.sh`:

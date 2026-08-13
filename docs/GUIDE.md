@@ -1,119 +1,121 @@
-# release-kit 使用文档
+# release-kit Guide
 
-## 〇、安装与统一入口
+**[English](GUIDE.md) | [简体中文](GUIDE.zh.md)**
 
-两种方式任选：
+## 0. Install & Entry Points
+
+Two ways, pick one:
 
 ```bash
-# 方式 A：git clone 即用（推荐，随仓库携带）
-git clone <release-kit-repo> tools/release-kit
-
-# 方式 B：pub.dev 安装（Dart CLI 包）
+# B: install from pub.dev (Dart CLI package)
 dart pub global activate release_kit
+
+# A: git clone and use (ship the tool with your repo)
+git clone <release-kit-repo> tools/release-kit
 ```
 
-命令入口：
+Command entry points:
 
-- 方式 A：`tools/release-kit/release-kit.sh`（macOS/Linux）或 `release-kit.ps1`（Windows）
-- 方式 B：`release-kit`（全局命令）
+- B: `release-kit` (global command)
+- A: `tools/release-kit/release-kit.sh` (macOS/Linux) or `release-kit.ps1` (Windows)
 
 ```bash
-release-kit init                       # 一键初始化（生成配置 + 安装 hook）
-release-kit publish <platform> [args]  # 打包（可加 -p <项目根> 从任意目录运行）
+release-kit init                       # one-step setup (config + hook)
+release-kit publish <platform> [args]  # build & package (use -p <project-root> from anywhere)
 ```
 
-配置文件放在**项目内**，解析优先级：
+Config lives **inside the project**, resolution order:
 
-1. `<项目>/release-kit.yaml`（推荐，随项目入库）
-2. `<项目>/config.yaml`
-3. 工具默认 `lib/assets/config.yaml`
+1. `<project>/release-kit.yaml` (recommended, commit it with your repo)
+2. `<project>/config.yaml`
+3. tool default `lib/assets/config.yaml`
 
-两个命令默认作用于当前目录。加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
+Both commands target the current directory. Add `-p <project-root>` (anywhere in the args) to target another project from any directory:
 
 ```bash
-# 在任意目录直接操作另一个项目
+# operate on another project from anywhere
 release-kit init -p /path/to/myapp
 release-kit publish android -p /path/to/myapp
 release-kit publish windows -Obfuscate -p /path/to/myapp
 ```
 
-## 一、版本号管理
+## 1. Version Management
 
-### 递增规则（`bin/bump_version.dart`）
+### Bump rules (`bin/bump_version.dart`)
 
-| 代码变更特征 | 递增 | 示例 |
+| Code change | Bump | Example |
 |---|---|---|
-| 删除源码文件 | major | `1.0.0 → 2.0.0` |
-| 新增源码文件，或源码新增行数 ≥ 40 | minor | `1.0.0 → 1.1.0` |
-| 其他（小改动、文档、配置） | patch | `1.1.0 → 1.1.1` |
+| Source file deleted | major | `1.0.0 → 2.0.0` |
+| New source file, or ≥ 40 added source lines | minor | `1.0.0 → 1.1.0` |
+| Other (small edits, docs, config) | patch | `1.1.0 → 1.1.1` |
 
-build 号（`+N`）每次提交 +1。
+The build number (`+N`) increments by 1 on every commit.
 
-### 路径兼容
+### Path resolution
 
-`bump_version.dart` 通过 `--pubspec <path>` 或自动探测定位 pubspec：
+`bump_version.dart` locates pubspec via `--pubspec <path>` or auto-detection:
 
-- 独立项目：`<root>/pubspec.yaml`
-- 单仓库（如 ZShell）：`<root>/app/pubspec.yaml`
-- 显式指定：`dart run bin/bump_version.dart --pubspec path/to/pubspec.yaml`
+- Standalone project: `<root>/pubspec.yaml`
+- Monorepo (e.g. ZShell): `<root>/app/pubspec.yaml`
+- Explicit: `dart run bin/bump_version.dart --pubspec path/to/pubspec.yaml`
 
-### 手动调用
+### Manual bump
 
 ```bash
-# 直接运行 Dart 脚本（release-kit 已精简为 init + publish，手动递增走这里）
-dart run bin/bump_version.dart                # 智能递增 + build+1
-dart run bin/bump_version.dart --build-only   # 仅 build+1（发布锁定）
+# run the Dart script directly (release-kit ships init + publish; bump manually via this)
+dart run bin/bump_version.dart                # smart bump + build+1
+dart run bin/bump_version.dart --build-only   # only build+1 (release-lock)
 ```
 
-### hook 安装
+### Hook install
 
 ```bash
 release-kit init
 ```
 
-效果：复制 `release-kit.yaml` 模板 + `git config core.hooksPath` 指向项目 `.githooks`，每次 `git commit` 自动递增并 stage。
+Effect: copies the `release-kit.yaml` template + sets `git config core.hooksPath` to the project's `.githooks`, so every `git commit` auto-bumps and stages.
 
-跳过递增（发布锁定版本）：`git commit --no-verify`。
+Skip the bump (release-lock a version): `git commit --no-verify`.
 
-## 二、统一配置
+## 2. Unified Config
 
-配置放在项目内：`<项目>/release-kit.yaml`（由 `release-kit init` 从工具模板复制而来）。
+Config lives inside the project: `<project>/release-kit.yaml` (copied from the tool template by `release-kit init`).
 
-扁平 `key: value`，点号命名空间，`#` 注释。所有打包脚本读取同一份。
+Flat `key: value`, dot-namespace, `#` comments. All platform scripts read the same file.
 
-| 键 | 说明 |
+| Key | Description |
 |---|---|
-| `app.name` | 应用名（zip/产物命名） |
-| `app.bundleId` | Android 包名 / iOS bundle id |
-| `app.logo` | 启动图标源图（可选，`publish` 时自动生成各平台 icon） |
-| `build.dartDefine.*` | `--dart-define` 注入项 |
-| `output.dir` | 产物输出目录（默认 `dist`） |
-| `hardening.enabled` | Windows 加固改名开关（默认 false） |
-| `hardening.engineDll` | 引擎 DLL 新名 |
-| `hardening.assetDir` | 资源目录新名 |
-| `android.keystore` | keystore 路径 |
-| `android.keyAlias` | keystore 别名 |
+| `app.name` | app name (zip/artifact naming) |
+| `app.bundleId` | Android package name / iOS bundle id |
+| `app.logo` | launcher icon source image (optional, icons auto-generated on `publish`) |
+| `build.dartDefine.*` | injected via `--dart-define` |
+| `output.dir` | artifact output dir (default `dist`) |
+| `hardening.enabled` | Windows hardening rename switch (default false) |
+| `hardening.engineDll` | new engine DLL name |
+| `hardening.assetDir` | new asset dir name |
+| `android.keystore` | keystore path |
+| `android.keyAlias` | keystore alias |
 
-密钥密码走环境变量，不入库：`ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`。
+Keystore passwords come from env vars, never from the config: `ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`.
 
-### 启动图标自动生成
+### Auto launcher icons
 
-在配置中设置 `app.logo`（一张源图，建议 ≥1024×1024 PNG）：
+Set `app.logo` in the config (one source image, ≥ 1024×1024 PNG recommended):
 
 ```yaml
 app.logo: assets/logo.png
 ```
 
-每次 `release-kit publish <platform>` 都会先调用 `lib/assets/scripts/generate_icons.sh`（Windows 用 `.ps1`），基于 `flutter_launcher_icons` 自动生成：
+Each `release-kit publish <platform>` first runs `lib/assets/scripts/generate_icons.sh` (`.ps1` on Windows), which drives `flutter_launcher_icons` to generate:
 
-- Android：`android/app/src/main/res/mipmap-*/ic_launcher.png`
-- iOS：`ios/Runner/Assets.xcassets/AppIcon.appiconset/`
-- macOS：`macos/Runner/Assets.xcassets/AppIcon.appiconset/`
-- Windows：`windows/runner/resources/app_icon.ico`
+- Android: `android/app/src/main/res/mipmap-*/ic_launcher.png`
+- iOS: `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
+- macOS: `macos/Runner/Assets.xcassets/AppIcon.appiconset/`
+- Windows: `windows/runner/resources/app_icon.ico`
 
-未设置 `app.logo` 时跳过；源图缺失时报错提示。首次使用会自动添加 `flutter_launcher_icons` 到 dev_dependencies。
+Skipped when `app.logo` is unset; errors out when the source image is missing. On first use it auto-adds `flutter_launcher_icons` to dev_dependencies.
 
-## 三、打包
+## 3. Packaging
 
 ### Windows
 
@@ -121,27 +123,27 @@ app.logo: assets/logo.png
 release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify]
 ```
 
-- `-Obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
-- `-SkipVerify`：跳过打包前的 exe 启动冒烟测试（默认会验证 exe 能否正常启动，构建损坏时提前告警）
-- 产物：`dist/<app>-<version>-win64.zip` + sha256
-- 加固改名（`-Harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
+- `-Obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
+- `-SkipVerify`: skip the pre-zip "exe launches" smoke test (on by default; warns early if the build is broken)
+- Artifacts: `dist/<app>-<version>-win64.zip` + sha256
+- Hardening rename (with `-Harden` or `hardening.enabled=true`): `flutter_windows.dll → core_engine.dll`, auto-patching EXE/plugin DLL import tables
 
-### 清理 Flutter 痕迹（`-CleanFlutter`）
+### Scrub Flutter traces (`-CleanFlutter`)
 
 ```bash
 release-kit publish windows -Obfuscate -CleanFlutter
 ```
 
-纯**产物层**处理，**不改动项目源码**（`main.cpp` / CMake / `git status` 均不受影响，`flutter run` 正常）：
+Pure **artifact-level** processing, **no project source changes** (`main.cpp` / CMake / `git status` unaffected, `flutter run` keeps working):
 
 1. `data\flutter_assets` → `data\resources`
-2. exe 内嵌的 UTF-16 `flutter_assets` 路径字符串 → `resources`（等长 NUL 填充，引擎正常加载）
-3. `flutter_windows.dll` → `core_engine.dll` + 导入表补丁
-4. 残留的含 `flutter` 插件 DLL（如 `flutter_tts_plugin.dll`、`isar_community_flutter_libs_plugin.dll`）改名 + 引用补丁
+2. exe-embedded UTF-16 `flutter_assets` path string → `resources` (equal-length NUL padding, engine loads fine)
+3. `flutter_windows.dll` → `core_engine.dll` + import table patch
+4. remaining Flutter plugin DLLs (e.g. `flutter_tts_plugin.dll`, `isar_community_flutter_libs_plugin.dll`) renamed + reference patched
 
-产物中不再出现 `flutter` 文件名，且**打包后的 exe 已验证可正常运行**。
+The bundle no longer contains any `flutter` filenames, and **the packaged exe is verified runnable**.
 
-> `-CleanFlutter` 隐含启用加固改名；与 `-NoRename` 互斥（后者优先）。
+> `-CleanFlutter` implies hardening rename; mutually exclusive with `-NoRename` (`-NoRename` wins).
 
 ### Android
 
@@ -149,31 +151,31 @@ release-kit publish windows -Obfuscate -CleanFlutter
 release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 ```
 
-- 默认构建 APK + AAB
-- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
-- 产物：`dist/<app>-<version>-android.apk / .aab` + sha256
-- 签名需在项目 `android/` 配置好 keystore（密码走环境变量）
+- Default builds APK + AAB
+- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
+- Artifacts: `dist/<app>-<version>-android.apk / .aab` + sha256
+- Signing must be configured with a keystore under your project's `android/` (passwords via env vars)
 
-> Windows 入口（`release-kit.ps1`）下，`-Obfuscate` 会自动映射为 `--obfuscate`，两平台命令写法统一：
+> On the Windows entry (`release-kit.ps1`), `-Obfuscate` auto-maps to `--obfuscate`, so the two platforms share one spelling:
 > ```powershell
-> release-kit publish windows -Obfuscate      # Windows 混淆
-> release-kit publish android -Obfuscate      # Android 混淆（等价 --obfuscate）
+> release-kit publish windows -Obfuscate      # Windows obfuscation
+> release-kit publish android -Obfuscate      # Android obfuscation (same as --obfuscate)
 > ```
-> 其余非 Windows 平台（macOS/Linux/iOS）在 Windows 上通过 Git Bash 执行 `.sh` 脚本。
+> Other non-Windows platforms (macOS/Linux/iOS) run via Git Bash on Windows.
 
-### macOS / iOS / Linux（骨架）
+### macOS / iOS / Linux (skeleton)
 
-脚本含配置读取 + `flutter build` 命令 + 产物路径，但**尚未在对应环境验证**，需按需完善：
+The scripts contain config reading + `flutter build` commands + artifact paths, but are **not yet verified in the corresponding environments** — refine as needed:
 
-- macOS：`.app` → dmg（`hdiutil`）
-- iOS：`flutter build ipa` → `.ipa`（需 Xcode 签名）
-- Linux：bundle → tar.gz / AppImage
+- macOS: `.app` → dmg (`hdiutil`)
+- iOS: `flutter build ipa` → `.ipa` (needs Xcode signing)
+- Linux: bundle → tar.gz / AppImage
 
-## 四、常见问题
+## 4. FAQ
 
-| 现象 | 原因 | 解决 |
+| Symptom | Cause | Fix |
 |---|---|---|
-| hook 报 `version: line not found` | pubspec 无 `version:` 行 | 在 pubspec 添加 `version: 0.1.0+1` |
-| hook 不生效 | `core.hooksPath` 未配置 | 重跑 `release-kit init` |
-| Windows 打包 DLL_NOT_FOUND | 加固改名后导入表未补丁 | 用最新脚本重跑（自动补丁） |
-| Android 打包签名失败 | keystore 密码未传 | 设置 `ANDROID_KEY_PASSWORD` 等环境变量 |
+| hook reports `version: line not found` | pubspec has no `version:` line | add `version: 0.1.0+1` to pubspec |
+| hook not running | `core.hooksPath` not set | re-run `release-kit init` |
+| Windows build DLL_NOT_FOUND | import table not patched after hardening rename | re-run with the latest scripts (auto-patches) |
+| Android build signing failed | keystore password missing | set `ANDROID_KEY_PASSWORD` etc. env vars |

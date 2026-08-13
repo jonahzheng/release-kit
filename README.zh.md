@@ -20,9 +20,9 @@
 
 ---
 
-> **release-kit** — `git commit` 自动递增版本，一份 `release-kit.yaml` 驱动所有平台，一条命令打包 Windows / Android / macOS / Linux / iOS。
+> **release-kit** — pub.dev 上的 Dart CLI 工具包：`git commit` 自动递增版本，一份 `release-kit.yaml` 驱动所有平台，一条命令打包 Windows / Android / macOS / Linux / iOS。
 
-> 完整使用手册：[docs/GUIDE.md](docs/GUIDE.md)
+> 完整使用手册：[docs/GUIDE.zh.md](docs/GUIDE.zh.md)
 
 ---
 
@@ -38,19 +38,25 @@
 ## 快速开始
 
 ```bash
-git clone <release-kit-repo> tools/release-kit   # 1. 获取工具
-cd /path/to/myapp                                 # 2. 你的 Flutter 项目
+# 1. 安装（pub.dev 的 Dart CLI）
+dart pub global activate release_kit
 
-tools/release-kit/release-kit.sh init             # 3. 一键初始化：配置 + hook
-tools/release-kit/release-kit.sh publish android  # 4. 一条命令打包
+# 2. 你的 Flutter 项目
+cd /path/to/myapp
+
+# 3. 一键初始化：配置 + hook
+release-kit init
+
+# 4. 一条命令打包
+release-kit publish android
 ```
 
-或从 pub.dev 安装（Dart CLI）：
+备选 — git clone 方式（把工具随仓库携带）：
 
 ```bash
-dart pub global activate release_kit
-release-kit init
-release-kit publish android
+git clone <release-kit-repo> tools/release-kit
+tools/release-kit/release-kit.sh init
+tools/release-kit/release-kit.sh publish android
 ```
 
 Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
