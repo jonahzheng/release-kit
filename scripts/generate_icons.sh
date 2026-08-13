@@ -39,6 +39,29 @@ if [ ! -f "$LOGO" ]; then
   exit 1
 fi
 
+# skip if icons are already newer than the source logo (nothing changed)
+NEED_GEN=0
+for ic in \
+  "windows/runner/resources/app_icon.ico" \
+  "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" \
+  "ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" \
+  "macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json"; do
+  case "$PLATFORM" in
+    all) ;;
+    windows) case "$ic" in windows/*) ;; *) continue ;; esac ;;
+    android) case "$ic" in android/*) ;; *) continue ;; esac ;;
+    ios)     case "$ic" in ios/*)     ;; *) continue ;; esac ;;
+    macos)   case "$ic" in macos/*)   ;; *) continue ;; esac ;;
+    *) continue ;;
+  esac
+  if [ ! -f "$ic" ]; then NEED_GEN=1; break; fi
+  if [ "$LOGO" -nt "$ic" ]; then NEED_GEN=1; break; fi
+done
+if [ "$NEED_GEN" = "0" ]; then
+  echo "==> icons already up to date (newer than $LOGO) - skipping"
+  exit 0
+fi
+
 # ensure flutter_launcher_icons is available as a dev dependency
 if ! grep -q 'flutter_launcher_icons' pubspec.yaml; then
   echo "==> adding flutter_launcher_icons dev dependency..."

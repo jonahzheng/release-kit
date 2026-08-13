@@ -111,6 +111,57 @@ try {
     throw "app.logo not found: $logo (fix the path in your config, or remove app.logo to skip icons)"
   }
 
+  # normalize target platform ("" -> all)
+  $p = if ($Platform) { $Platform.ToLower() } else { "all" }
+  if ($p -eq "linux") {
+    Write-Host "==> flutter_launcher_icons has no Linux icon targets - skipping"
+    exit 0
+  }
+
+  # platform representative icon path(s) used to decide freshness
+  $targetIcons = @()
+  if ($p -eq "all" -or $p -eq "windows") { $targetIcons += Join-Path $proj "windows\runner\resources\app_icon.ico" }
+  if ($p -eq "all" -or $p -eq "android") { $targetIcons += (Get-ChildItem (Join-Path $proj "android\app\src\main\res\mipmap-xxxhdpi\ic_launcher.png") -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
+  if ($p -eq "all" -or $p -eq "ios")     { $targetIcons += Join-Path $proj "ios\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json" }
+  if ($p -eq "all" -or $p -eq "macos")   { $targetIcons += Join-Path $proj "macos\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json" }
+  $targetIcons = @($targetIcons | Where-Object { $_ })
+
+  # skip if icons are already newer than the source logo (nothing changed)
+  $logoTime = (Get-Item $logo).LastWriteTime
+  $needGen = $false
+  foreach ($ti in $targetIcons) {
+    if (-not (Test-Path $ti)) { $needGen = $true; break }
+    if ((Get-Item $ti).LastWriteTime -lt $logoTime) { $needGen = $true; break }
+  }
+  if (-not $needGen) {
+    Write-Host "==> icons already up to date (newer than $logo) - skipping"
+    exit 0
+  }
+
+  # if the target windows icon is locked (e.g. the app is running via
+  # flutter run, or an editor has it mapped), skip icon regeneration with a
+  # clear hint instead of letting flutter_launcher_icons throw a cryptic
+  # FileSystemException
+  $icoPath = Join-Path $proj "windows\runner\resources\app_icon.ico"
+  if (($p -eq "all" -or $p -eq "windows") -and (Test-Path $icoPath)) {
+    $icoLocked = $false
+    try {
+      $fs = [System.IO.File]::Open($icoPath, 'Open', 'ReadWrite', 'None')
+      $fs.Close()
+    } catch {
+      $icoLocked = $true
+    }
+    if ($icoLocked) {
+      Write-Host ""
+      Write-Host "==> app_icon.ico is locked by another process." -ForegroundColor Yellow
+      Write-Host "    Is the app running via 'flutter run -d windows'?" -ForegroundColor Yellow
+      Write-Host "    Stop it (e.g. press 'q' in the flutter run console), then re-run." -ForegroundColor Yellow
+      Write-Host "    Skipping icon regeneration for now." -ForegroundColor Yellow
+      Write-Host ""
+      exit 0
+    }
+  }
+
   if (-not (Select-String -Path "pubspec.yaml" -Pattern "flutter_launcher_icons" -Quiet)) {
     Write-Host "==> adding flutter_launcher_icons dev dependency..."
     flutter pub add --dev flutter_launcher_icons
@@ -146,13 +197,6 @@ try {
   $topKey = "flutter_launcher_icons"
   if ($ver -and [version]$ver -lt [version]"0.12.0") { $topKey = "flutter_icons" }
   Write-Host "==> flutter_launcher_icons $ver (config key: $topKey)"
-
-  # normalize target platform ("" -> all)
-  $p = if ($Platform) { $Platform.ToLower() } else { "all" }
-  if ($p -eq "linux") {
-    Write-Host "==> flutter_launcher_icons has no Linux icon targets - skipping"
-    exit 0
-  }
 
   $flic = "flutter_launcher_icons.yaml"
   $sb = New-Object System.Text.StringBuilder
