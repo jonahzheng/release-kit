@@ -68,7 +68,7 @@ try {
         "windows" {
           # publish_windows.ps1 takes switch params; pass them explicitly so a
           # string-array splat can't mis-bind "-Obfuscate" onto $OutputDir
-          $obf = $false; $skp = $false; $nor = $false; $hrd = $false; $cln = $false; $outDir = ""
+          $obf = $false; $skp = $false; $nor = $false; $hrd = $false; $cln = $false; $srv = $false; $outDir = ""
           for ($i = 0; $i -lt $rest.Count; $i++) {
             switch ($rest[$i]) {
               "-Obfuscate"   { $obf = $true }
@@ -76,10 +76,11 @@ try {
               "-NoRename"    { $nor = $true }
               "-Harden"      { $hrd = $true }
               "-CleanFlutter"{ $cln = $true }
+              "-SkipVerify"  { $srv = $true }
               "-OutputDir"   { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
             }
           }
-          & (Join-Path $kitRoot "scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -OutputDir $outDir
+          & (Join-Path $kitRoot "scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -SkipVerify:$srv -OutputDir $outDir
         }
         "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }
         "macos"   { & (Join-Path $kitRoot "scripts\publish_macos.sh") @rest }

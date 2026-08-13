@@ -105,10 +105,11 @@ app.logo: assets/logo.png
 ### Windows
 
 ```bash
-release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter]
+release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify]
 ```
 
 - `-Obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
+- `-SkipVerify`：跳过打包前的 exe 启动冒烟测试（默认会验证 exe 能否正常启动，构建损坏时提前告警）
 - 产物：`dist/<app>-<version>-win64.zip` + sha256
 - 加固改名（`-Harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
 

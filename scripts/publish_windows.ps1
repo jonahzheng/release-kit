@@ -1,6 +1,6 @@
 # release-kit: publish Windows build (config-driven)
 # Usage:
-#   powershell -ExecutionPolicy Bypass -File publish_windows.ps1 [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-OutputDir <path>]
+#   powershell -ExecutionPolicy Bypass -File publish_windows.ps1 [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify] [-OutputDir <path>]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 #
 # Hardening (rename engine dll + assets, patch import tables) is enabled by
@@ -8,9 +8,11 @@
 # it on regardless of config; pass -NoRename to force it off.
 #
 # -CleanFlutter additionally scrubs Flutter traces from the bundle:
-#   1. rewrites main.cpp so DartProject points at data\resources (reverted
-#      after the build, so flutter run etc. are unaffected)
+#   1. renames the asset dir and patches the exe's embedded UTF-16 path so
+#      the engine loads data\resources (no source changes, reverted nothing)
 #   2. renames leftover flutter_* plugin dlls (e.g. flutter_tts_plugin.dll)
+#
+# -SkipVerify skips the post-build "exe launches" smoke test.
 
 param(
   [switch]$Obfuscate,
@@ -18,6 +20,7 @@ param(
   [switch]$NoRename,
   [switch]$Harden,
   [switch]$CleanFlutter,
+  [switch]$SkipVerify,
   [string]$OutputDir = ""
 )
 
@@ -229,6 +232,42 @@ if ($hardEnabled -and -not $NoRename) {
     # scrub "flutter" strings from text-ish files (manifest, json) in data/
     Get-ChildItem (Join-Path $OutputDir "data") -Filter "*.json" -ErrorAction SilentlyContinue |
       ForEach-Object { $t = Get-Content $_.FullName -Raw; if ($t -match "flutter") { Write-Host "==> note: flutter ref in $($_.Name)" } }
+  }
+}
+
+# --- smoke test: the collected exe should launch and stay alive ---
+# Catches broken builds (e.g. engine DLL wrong variant, missing kernel blob)
+# before they get packaged. Skippable with -SkipVerify.
+if (-not $SkipVerify) {
+  $verifyExe = Join-Path $OutputDir "$binary.exe"
+  if (Test-Path $verifyExe) {
+    Write-Host "==> verifying exe launches ..."
+    $pinfo = New-Object System.Diagnostics.ProcessStartInfo
+    $pinfo.FileName = $verifyExe
+    $pinfo.WorkingDirectory = $OutputDir
+    $pinfo.RedirectStandardError = $true
+    $pinfo.UseShellExecute = $false
+    $pinfo.CreateNoWindow = $true
+    try {
+      $p = [System.Diagnostics.Process]::Start($pinfo)
+      Start-Sleep -Seconds 5
+      if ($p.HasExited) {
+        $err = ""
+        try { $err = $p.StandardError.ReadToEnd() } catch {}
+        Write-Host "==> WARNING: exe exited early (code $($p.ExitCode)) - the build may be broken!" -ForegroundColor Yellow
+        if ($err -match "kernel binary|Failed to start Flutter engine|kInvalidArguments") {
+          Write-Host "    Likely cause: engine DLL variant mismatch / missing AOT kernel." -ForegroundColor Yellow
+          Write-Host "    Try: flutter clean, then re-run this publish." -ForegroundColor Yellow
+        } elseif ($err) {
+          Write-Host "    stderr: $($err.Substring(0, [Math]::Min(300, $err.Length)))" -ForegroundColor Yellow
+        }
+      } else {
+        Write-Host "==> exe launches OK (PID $($p.Id))"
+        Stop-Process -Id $p.Id -Force -ErrorAction SilentlyContinue
+      }
+    } catch {
+      Write-Host "==> could not run smoke test: $($_.Exception.Message)" -ForegroundColor Yellow
+    }
   }
 }
 
