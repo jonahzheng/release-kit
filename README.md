@@ -1,8 +1,20 @@
+<div align="center">
+
 # release-kit
 
-**[English](README.md) | [简体中文](README.zh.md)**
+**[English](README.md) · [简体中文](README.zh.md)**
 
-Flutter release toolkit: **automatic version management** + **multi-platform packaging**, unified config, reusable by any Flutter project.
+[![Flutter](https://img.shields.io/badge/Flutter-2DBCF2?logo=flutter&logoColor=white)](https://flutter.dev)
+[![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Android%20%7C%20macOS%20%7C%20Linux%20%7C%20iOS-blue)](#)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
+Flutter release toolkit — **automatic version management** + **multi-platform packaging**, unified config, reusable by any Flutter project.
+
+[![Sponsor me on GitHub](https://img.shields.io/badge/%E2%9D%A4-Sponsor%20me%20on%20GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/jonahzheng)
+
+</div>
+
+---
 
 ## Features
 
@@ -51,25 +63,25 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 | Platform | Flags | Description |
 |---|---|---|
-| windows | `-Obfuscate` | Dart obfuscated release build (symbols in `build/obfuscate_symbols`) |
+| **windows** | `-Obfuscate` | Dart obfuscated release build (symbols in `build/obfuscate_symbols`) |
 | | `-SkipBuild` | reuse existing build outputs, just collect & zip |
 | | `-NoRename` | skip hardening rename even if enabled |
 | | `-Harden` | force hardening on (rename `flutter_windows.dll` → `core_engine.dll` + patch imports) |
 | | `-CleanFlutter` | scrub all Flutter traces from the bundle (asset dir + exe path + plugin dlls), no source changes |
 | | `-SkipVerify` | skip the pre-zip "exe launches" smoke test (on by default) |
 | | `-OutputDir <path>` | custom artifact dir (default: `<project>/dist/<binary>`) |
-| android | `--apk` / `--aab` | build only APK or only AAB (default: both) |
+| **android** | `--apk` / `--aab` | build only APK or only AAB (default: both) |
 | | `--skip-build` | reuse existing outputs, just collect |
 | | `--obfuscate` | Dart obfuscated release build (symbols in `build/obfuscate_symbols`) |
-| linux | `--skip-build` | reuse existing outputs, just package |
+| **linux** | `--skip-build` | reuse existing outputs, just package |
 | | `--appimage` | also build an AppImage (requires `linuxdeploy` on PATH) |
-| macos / ios | `--skip-build` | reuse existing outputs, just package |
+| **macos / ios** | `--skip-build` | reuse existing outputs, just package |
 
 All flags combine with `-p <project-root>`.
 
-> On the Windows entry (`release-kit.ps1`), `-Obfuscate` also works for android (auto-mapped to `--obfuscate`), so the two most common platforms share one spelling: `release-kit publish android -Obfuscate`. Non-Windows shell platforms run via Git Bash.
+> **Note:** On the Windows entry (`release-kit.ps1`), `-Obfuscate` also works for android (auto-mapped to `--obfuscate`), so the two most common platforms share one spelling: `release-kit publish android -Obfuscate`. Non-Windows shell platforms run via Git Bash.
 
-> **All platforms** also accept `--no-icons` to skip auto icon generation (e.g. when your project's Dart SDK can't resolve `flutter_launcher_icons` yet): `release-kit publish windows --no-icons`.
+> **Note:** **All platforms** also accept `--no-icons` to skip auto icon generation (e.g. when your project's Dart SDK can't resolve `flutter_launcher_icons` yet): `release-kit publish windows --no-icons`.
 
 ## Layout
 
@@ -92,12 +104,6 @@ docs/RELEASE.md           # usage docs
 README.md / README.zh.md  # English / 简体中文
 ```
 
-## Support
-
-Like this project? Sponsor me on GitHub:
-
-[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-GitHub?logo=github&style=for-the-badge&color=ea4aaa)](https://github.com/sponsors/jonahzheng)
-
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).
