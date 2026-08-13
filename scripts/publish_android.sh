@@ -76,6 +76,7 @@ if [ "$SKIP_BUILD" = "0" ]; then
 fi
 
 APK_DIR="$PROJECT_ROOT/build/app/outputs/flutter-apk"
+AAB_DIR="$PROJECT_ROOT/build/app/outputs/bundle/release"
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"
 
 if [ "$DO_APK" = "1" ]; then
@@ -87,9 +88,9 @@ if [ "$DO_APK" = "1" ]; then
 fi
 
 if [ "$DO_AAB" = "1" ]; then
-  if [ -f "$APK_DIR/app-release.aab" ]; then
+  if [ -f "$AAB_DIR/app-release.aab" ]; then
     AAB_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-android.aab"
-    cp "$APK_DIR/app-release.aab" "$AAB_OUT"
+    cp "$AAB_DIR/app-release.aab" "$AAB_OUT"
     print_artifact "$AAB_OUT"
   fi
 fi
