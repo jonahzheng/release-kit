@@ -65,12 +65,12 @@ try {
     "init" {
       $cfg = Join-Path (Get-Location) "release-kit.yaml"
       if (-not (Test-Path $cfg)) {
-        Copy-Item (Join-Path $kitRoot "config.yaml") $cfg
+        Copy-Item (Join-Path $kitRoot "lib\assets\config.yaml") $cfg
         Write-Host "==> created $cfg (edit it to match your app)"
       } else {
         Write-Host "==> $cfg already exists, keeping it"
       }
-      & (Join-Path $kitRoot "scripts\install_hook.ps1")
+      & (Join-Path $kitRoot "lib\assets\scripts\install_hook.ps1")
       break
     }
     "publish" {
@@ -83,7 +83,7 @@ try {
           if ($argsList[$i] -eq "--no-icons") { $skipIcons = $true } else { $rest += $argsList[$i] }
         }
       }
-      if (-not $skipIcons) { & (Join-Path $kitRoot "scripts\generate_icons.ps1") -Platform $platform }
+      if (-not $skipIcons) { & (Join-Path $kitRoot "lib\assets\scripts\generate_icons.ps1") -Platform $platform }
       switch ($platform) {
         "windows" {
           # publish_windows.ps1 takes switch params; pass them explicitly so a
@@ -100,17 +100,17 @@ try {
               "-OutputDir"   { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
             }
           }
-          & (Join-Path $kitRoot "scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -SkipVerify:$srv -OutputDir $outDir
+          & (Join-Path $kitRoot "lib\assets\scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -SkipVerify:$srv -OutputDir $outDir
         }
         "android" {
           # map the common -Obfuscate spelling to the android --obfuscate flag
           $androidArgs = @()
           foreach ($a in $rest) { if ($a -eq "-Obfuscate") { $androidArgs += "--obfuscate" } else { $androidArgs += $a } }
-          Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_android.sh") -ArgList $androidArgs
+          Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_android.sh") -ArgList $androidArgs
         }
-        "macos"   { Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_macos.sh") -ArgList $rest }
-        "linux"   { Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_linux.sh") -ArgList $rest }
-        "ios"     { Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_ios.sh") -ArgList $rest }
+        "macos"   { Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_macos.sh") -ArgList $rest }
+        "linux"   { Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_linux.sh") -ArgList $rest }
+        "ios"     { Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_ios.sh") -ArgList $rest }
         default   { Write-Host "unknown platform: $platform" -ForegroundColor Red; Show-Usage }
       }
       break

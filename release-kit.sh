@@ -72,12 +72,12 @@ case "$cmd" in
     cd "$ROOT"
     cfg="release-kit.yaml"
     if [ ! -f "$cfg" ]; then
-      cp "$KIT_ROOT/config.yaml" "$cfg"
+      cp "$KIT_ROOT/lib/assets/config.yaml" "$cfg"
       echo "==> created $cfg (edit it to match your app)"
     else
       echo "==> $cfg already exists, keeping it"
     fi
-    exec "$KIT_ROOT/scripts/install_hook.sh"
+    exec "$KIT_ROOT/lib/assets/scripts/install_hook.sh"
     ;;
   publish)
     platform="$1"; shift || usage
@@ -94,16 +94,16 @@ case "$cmd" in
     # shellcheck disable=SC2086
     set -- $KEEP
     if [ "$NO_ICONS" = "0" ]; then
-      "$KIT_ROOT/scripts/generate_icons.sh" -p "$platform"
+      "$KIT_ROOT/lib/assets/scripts/generate_icons.sh" -p "$platform"
     else
       echo "==> --no-icons: skipping icon generation"
     fi
     case "$platform" in
-      windows) powershell -ExecutionPolicy Bypass -File "$KIT_ROOT/scripts/publish_windows.ps1" "$@" ;;
-      android) exec "$KIT_ROOT/scripts/publish_android.sh" "$@" ;;
-      macos)   exec "$KIT_ROOT/scripts/publish_macos.sh" "$@" ;;
-      linux)   exec "$KIT_ROOT/scripts/publish_linux.sh" "$@" ;;
-      ios)     exec "$KIT_ROOT/scripts/publish_ios.sh" "$@" ;;
+      windows) powershell -ExecutionPolicy Bypass -File "$KIT_ROOT/lib/assets/scripts/publish_windows.ps1" "$@" ;;
+      android) exec "$KIT_ROOT/lib/assets/scripts/publish_android.sh" "$@" ;;
+      macos)   exec "$KIT_ROOT/lib/assets/scripts/publish_macos.sh" "$@" ;;
+      linux)   exec "$KIT_ROOT/lib/assets/scripts/publish_linux.sh" "$@" ;;
+      ios)     exec "$KIT_ROOT/lib/assets/scripts/publish_ios.sh" "$@" ;;
       *) echo "unknown platform: $platform" >&2; usage ;;
     esac
     ;;

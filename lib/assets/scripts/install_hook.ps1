@@ -23,11 +23,12 @@ if (Test-Path (Join-Path $ProjectRoot "app\pubspec.yaml")) {
 }
 
 $pubspecAbs = (Join-Path $ProjectRoot $pubspec).Replace("\", "/")
-$bumpAbs = (Join-Path $kitRoot "bin\bump_version.dart").Replace("\", "/")
+# $kitRoot = lib/assets (PSScriptRoot/..); package root = Split-Path -Parent $kitRoot
+$bumpAbs = (Join-Path (Split-Path -Parent $kitRoot) "bin\bump_version.dart").Replace("\", "/")
 $repoAbs = $ProjectRoot.Replace("\", "/")
 
 # Read template and substitute placeholders
-$template = Get-Content (Join-Path $kitRoot "bin\pre-commit.hook") -Raw
+$template = Get-Content (Join-Path $kitRoot "pre-commit.hook") -Raw
 $hook = $template.Replace("{SMART_BUMP_PATH}", $bumpAbs)
 $hook = $hook.Replace("{PUBSPEC_PATH}", $pubspecAbs)
 $hook = $hook.Replace("{REPO_ROOT}", $repoAbs)

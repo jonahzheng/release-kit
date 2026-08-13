@@ -27,14 +27,15 @@ else
 fi
 
 PUBSPEC_ABS="$PROJECT_ROOT/$PUBSPEC"
-BUMP_ABS="$KIT_ROOT/bin/bump_version.dart"
+# KIT_ROOT = lib/assets (scripts/..); package root = KIT_ROOT/..
+BUMP_ABS="$KIT_ROOT/../bin/bump_version.dart"
 
 mkdir -p "$PROJECT_ROOT/.githooks"
 
 sed -e "s|{SMART_BUMP_PATH}|$BUMP_ABS|g" \
     -e "s|{PUBSPEC_PATH}|$PUBSPEC_ABS|g" \
     -e "s|{REPO_ROOT}|$PROJECT_ROOT|g" \
-    "$KIT_ROOT/bin/pre-commit.hook" > "$PROJECT_ROOT/.githooks/pre-commit"
+    "$KIT_ROOT/pre-commit.hook" > "$PROJECT_ROOT/.githooks/pre-commit"
 chmod +x "$PROJECT_ROOT/.githooks/pre-commit"
 echo "==> hook written: $PROJECT_ROOT/.githooks/pre-commit"
 

@@ -1,8 +1,21 @@
 # release-kit 使用文档
 
-## 〇、统一入口
+## 〇、安装与统一入口
 
-所有操作通过 `release-kit.sh`（macOS/Linux）或 `release-kit.ps1`（Windows）完成：
+两种方式任选：
+
+```bash
+# 方式 A：git clone 即用（推荐，随仓库携带）
+git clone <release-kit-repo> tools/release-kit
+
+# 方式 B：pub.dev 安装（Dart CLI 包）
+dart pub global activate release_kit
+```
+
+命令入口：
+
+- 方式 A：`tools/release-kit/release-kit.sh`（macOS/Linux）或 `release-kit.ps1`（Windows）
+- 方式 B：`release-kit`（全局命令）
 
 ```bash
 release-kit init                       # 一键初始化（生成配置 + 安装 hook）
@@ -13,7 +26,7 @@ release-kit publish <platform> [args]  # 打包（可加 -p <项目根> 从任�
 
 1. `<项目>/release-kit.yaml`（推荐，随项目入库）
 2. `<项目>/config.yaml`
-3. 工具默认 `config.yaml`
+3. 工具默认 `lib/assets/config.yaml`
 
 两个命令默认作用于当前目录。加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
 
@@ -91,7 +104,7 @@ release-kit init
 app.logo: assets/logo.png
 ```
 
-每次 `release-kit publish <platform>` 都会先调用 `scripts/generate_icons.sh`（Windows 用 `.ps1`），基于 `flutter_launcher_icons` 自动生成：
+每次 `release-kit publish <platform>` 都会先调用 `lib/assets/scripts/generate_icons.sh`（Windows 用 `.ps1`），基于 `flutter_launcher_icons` 自动生成：
 
 - Android：`android/app/src/main/res/mipmap-*/ic_launcher.png`
 - iOS：`ios/Runner/Assets.xcassets/AppIcon.appiconset/`
