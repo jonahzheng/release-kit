@@ -141,6 +141,13 @@ release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 - 产物：`dist/<app>-<version>-android.apk / .aab` + sha256
 - 签名需在项目 `android/` 配置好 keystore（密码走环境变量）
 
+> Windows 入口（`release-kit.ps1`）下，`-Obfuscate` 会自动映射为 `--obfuscate`，两平台命令写法统一：
+> ```powershell
+> release-kit publish windows -Obfuscate      # Windows 混淆
+> release-kit publish android -Obfuscate      # Android 混淆（等价 --obfuscate）
+> ```
+> 其余非 Windows 平台（macOS/Linux/iOS）在 Windows 上通过 Git Bash 执行 `.sh` 脚本。
+
 ### macOS / iOS / Linux（骨架）
 
 脚本含配置读取 + `flutter build` 命令 + 产物路径，但**尚未在对应环境验证**，需按需完善：

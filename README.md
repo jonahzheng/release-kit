@@ -67,6 +67,8 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 All flags combine with `-p <project-root>`.
 
+> On the Windows entry (`release-kit.ps1`), `-Obfuscate` also works for android (auto-mapped to `--obfuscate`), so the two most common platforms share one spelling: `release-kit publish android -Obfuscate`. Non-Windows shell platforms run via Git Bash.
+
 > **All platforms** also accept `--no-icons` to skip auto icon generation (e.g. when your project's Dart SDK can't resolve `flutter_launcher_icons` yet): `release-kit publish windows --no-icons`.
 
 ## Layout

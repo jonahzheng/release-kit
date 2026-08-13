@@ -67,6 +67,8 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 所有参数均可与 `-p <项目根>` 组合使用。
 
+> Windows 入口（`release-kit.ps1`）下，`-Obfuscate` 对 android 同样生效（自动映射为 `--obfuscate`），两个最常用平台命令写法统一：`release-kit publish android -Obfuscate`。其他 shell 平台在 Windows 上通过 Git Bash 执行。
+
 > **所有平台**均可加 `--no-icons` 跳过自动图标生成（例如项目 Dart SDK 暂无法解析 `flutter_launcher_icons` 时）：`release-kit publish windows --no-icons`。
 
 ## 目录
