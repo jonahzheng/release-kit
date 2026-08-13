@@ -1,27 +1,37 @@
-<div align="center">
+<h1 align="center">release-kit</h1>
 
-# release-kit
+<h3 align="center">Flutter 发布工具库 — 版本号自动管理 + 多平台打包，统一配置入口，可复用给任意 Flutter 项目。</h3>
 
-**[English](README.md) · [简体中文](README.zh.md)**
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-2DBCF2.svg?logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Platform-Windows%20Android%20macOS%20Linux%20iOS-blue.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+</p>
 
-[![Flutter](https://img.shields.io/badge/Flutter-2DBCF2?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Android%20%7C%20macOS%20%7C%20Linux%20%7C%20iOS-blue)](#)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <a href="README.md">English</a> | <strong>简体中文</strong>
+</p>
 
-Flutter 发布工具库：**版本号自动管理** + **多平台打包**，统一配置入口，可复用给任意 Flutter 项目。
+<p align="center">
+  <a href="https://github.com/sponsors/jonahzheng">
+    <img src="https://img.shields.io/badge/%E2%9D%A4%EF%B8%8F%20Sponsor%20me%20on%20GitHub-EA4AAA?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor me on GitHub">
+  </a>
+</p>
 
-[![Sponsor me on GitHub](https://img.shields.io/badge/%E2%9D%A4-Sponsor%20me%20on%20GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/jonahzheng)
+---
 
-</div>
+> **release-kit** 是一个 Flutter 发布工具库：`git commit` 自动递增版本，一份扁平 `release-kit.yaml` 驱动所有平台，一条命令打包 Windows / Android / macOS / Linux / iOS。
 
 ---
 
 ## 特性
 
-- `git commit` 自动递增版本（智能判定 major/minor/patch + build）
-- 一份扁平配置（`release-kit.yaml`）供所有平台脚本共用
-- 一条命令打包 Windows / Android / macOS / Linux / iOS
-- 配置 `app.logo` 一张源图，自动生成各平台启动图标
+- **版本自动递增** — `git commit` 自动递增 `pubspec.yaml`（智能判定 major/minor/patch + build）
+- **一份扁平配置** — `release-kit.yaml` 供所有平台脚本共用
+- **一条命令打包** — Windows / Android / macOS / Linux / iOS
+- **自动生成图标** — 配置 `app.logo` 一张源图，自动生成各平台启动图标
+
+---
 
 ## 快速开始
 
@@ -45,6 +55,8 @@ Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
 - `git commit` 自动递增 `pubspec.yaml`（`--no-verify` 跳过）
 - 产物输出到 `dist/<app>-<version>-<platform>`
 
+---
+
 ## 命令一览
 
 | 命令 | 说明 |
@@ -58,6 +70,8 @@ Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
 release-kit init -p /path/to/myapp
 release-kit publish android --obfuscate -p /path/to/myapp
 ```
+
+---
 
 ## 平台参数
 
@@ -83,6 +97,8 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 > **注意：** **所有平台**均可加 `--no-icons` 跳过自动图标生成（例如项目 Dart SDK 暂无法解析 `flutter_launcher_icons` 时）：`release-kit publish windows --no-icons`。
 
+---
+
 ## 目录
 
 ```
@@ -104,6 +120,8 @@ docs/RELEASE.md           # 使用文档
 README.md / README.zh.md  # English / 简体中文
 ```
 
+---
+
 ## License
 
-MIT — 详见 [LICENSE](LICENSE)。
+MIT License — 详见 [LICENSE](LICENSE)。

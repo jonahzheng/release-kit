@@ -1,27 +1,37 @@
-<div align="center">
+<h1 align="center">release-kit</h1>
 
-# release-kit
+<h3 align="center">Flutter release toolkit — automatic version management + multi-platform packaging, unified config, reusable by any Flutter project.</h3>
 
-**[English](README.md) · [简体中文](README.zh.md)**
+<p align="center">
+  <img src="https://img.shields.io/badge/Flutter-2DBCF2.svg?logo=flutter&logoColor=white" alt="Flutter">
+  <img src="https://img.shields.io/badge/Platform-Windows%20Android%20macOS%20Linux%20iOS-blue.svg" alt="Platform">
+  <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+</p>
 
-[![Flutter](https://img.shields.io/badge/Flutter-2DBCF2?logo=flutter&logoColor=white)](https://flutter.dev)
-[![Platforms](https://img.shields.io/badge/Platforms-Windows%20%7C%20Android%20%7C%20macOS%20%7C%20Linux%20%7C%20iOS-blue)](#)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+<p align="center">
+  <strong>English</strong> | <a href="README.zh.md">简体中文</a>
+</p>
 
-Flutter release toolkit — **automatic version management** + **multi-platform packaging**, unified config, reusable by any Flutter project.
+<p align="center">
+  <a href="https://github.com/sponsors/jonahzheng">
+    <img src="https://img.shields.io/badge/%E2%9D%A4%EF%B8%8F%20Sponsor%20me%20on%20GitHub-EA4AAA?style=for-the-badge&logo=github&logoColor=white" alt="Sponsor me on GitHub">
+  </a>
+</p>
 
-[![Sponsor me on GitHub](https://img.shields.io/badge/%E2%9D%A4-Sponsor%20me%20on%20GitHub-ea4aaa?style=for-the-badge&logo=github&logoColor=white)](https://github.com/sponsors/jonahzheng)
+---
 
-</div>
+> **release-kit** is a Flutter release toolkit: versions bump automatically on `git commit`, one flat `release-kit.yaml` drives every platform, and one command packages Windows / Android / macOS / Linux / iOS.
 
 ---
 
 ## Features
 
-- Version auto-bumps on `git commit` (smart major/minor/patch + build)
-- One flat config (`release-kit.yaml`) shared by all platform scripts
-- Package Windows / Android / macOS / Linux / iOS with one command
-- Auto-generate launcher icons from a single `app.logo` image
+- **Auto version bump** — `git commit` increments `pubspec.yaml` (smart major/minor/patch + build)
+- **One flat config** — `release-kit.yaml` shared by all platform scripts
+- **One command packaging** — Windows / Android / macOS / Linux / iOS
+- **Auto launcher icons** — one `app.logo` source image, icons generated for every platform
+
+---
 
 ## Quick Start
 
@@ -45,6 +55,8 @@ After `init`, edit `release-kit.yaml` in your project. Then:
 - `git commit` auto-bumps `pubspec.yaml` (skip with `--no-verify`)
 - Artifacts go to `dist/<app>-<version>-<platform>`
 
+---
+
 ## Commands
 
 | Command | Description |
@@ -58,6 +70,8 @@ Commands target the current directory. Add `-p <project-root>` (anywhere in the 
 release-kit init -p /path/to/myapp
 release-kit publish android --obfuscate -p /path/to/myapp
 ```
+
+---
 
 ## Platform Flags
 
@@ -83,6 +97,8 @@ All flags combine with `-p <project-root>`.
 
 > **Note:** **All platforms** also accept `--no-icons` to skip auto icon generation (e.g. when your project's Dart SDK can't resolve `flutter_launcher_icons` yet): `release-kit publish windows --no-icons`.
 
+---
+
 ## Layout
 
 ```
@@ -104,6 +120,8 @@ docs/RELEASE.md           # usage docs
 README.md / README.zh.md  # English / 简体中文
 ```
 
+---
+
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT License — see [LICENSE](LICENSE).
