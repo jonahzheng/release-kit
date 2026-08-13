@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Docs: restructure README and add an English usage guide (`docs/GUIDE.md`); make pub.dev install the primary quick start, with git-clone as an alternative.
+
 ## 0.1.0
 
 - Initial release as a Dart CLI package.
