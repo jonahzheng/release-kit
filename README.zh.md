@@ -53,7 +53,9 @@ release-kit publish android -Obfuscate -p /path/to/myapp
 |---|---|---|
 | windows | `-Obfuscate` | Dart 混淆发布构建（符号存 `build/obfuscate_symbols`） |
 | | `-SkipBuild` | 复用已有构建产物，只收集并打包 zip |
-| | `-NoRename` | 即使 `hardening.enabled` 为 true 也跳过加固改名 |
+| | `-NoRename` | 即使启用也跳过加固改名 |
+| | `-Harden` | 强制启用加固改名（`flutter_windows.dll → core_engine.dll` + 导入表补丁） |
+| | `-CleanFlutter` | 清理产物中所有 Flutter 痕迹（资源目录 + exe 路径 + 插件 DLL），不改源码 |
 | | `-OutputDir <路径>` | 自定义产物目录（默认 `<项目>/dist/<binary>`） |
 | android | `--apk` / `--aab` | 只构建 APK 或只构建 AAB（默认两者都构建） |
 | | `--skip-build` | 复用已有产物，只收集 |

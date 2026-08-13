@@ -105,12 +105,29 @@ app.logo: assets/logo.png
 ### Windows
 
 ```bash
-release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename]
+release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter]
 ```
 
 - `-Obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
 - 产物：`dist/<app>-<version>-win64.zip` + sha256
-- 加固改名（`hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`、`data/flutter_assets → data/resources`，自动补丁 EXE/插件 DLL 导入表
+- 加固改名（`-Harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
+
+### 清理 Flutter 痕迹（`-CleanFlutter`）
+
+```bash
+release-kit publish windows -Obfuscate -CleanFlutter
+```
+
+纯**产物层**处理，**不改动项目源码**（`main.cpp` / CMake / `git status` 均不受影响，`flutter run` 正常）：
+
+1. `data\flutter_assets` → `data\resources`
+2. exe 内嵌的 UTF-16 `flutter_assets` 路径字符串 → `resources`（等长 NUL 填充，引擎正常加载）
+3. `flutter_windows.dll` → `core_engine.dll` + 导入表补丁
+4. 残留的含 `flutter` 插件 DLL（如 `flutter_tts_plugin.dll`、`isar_community_flutter_libs_plugin.dll`）改名 + 引用补丁
+
+产物中不再出现 `flutter` 文件名，且**打包后的 exe 已验证可正常运行**。
+
+> `-CleanFlutter` 隐含启用加固改名；与 `-NoRename` 互斥（后者优先）。
 
 ### Android
 

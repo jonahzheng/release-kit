@@ -53,7 +53,9 @@ release-kit publish android -Obfuscate -p /path/to/myapp
 |---|---|---|
 | windows | `-Obfuscate` | Dart obfuscated release build (symbols in `build/obfuscate_symbols`) |
 | | `-SkipBuild` | reuse existing build outputs, just collect & zip |
-| | `-NoRename` | skip hardening rename even if `hardening.enabled` is true |
+| | `-NoRename` | skip hardening rename even if enabled |
+| | `-Harden` | force hardening on (rename `flutter_windows.dll` → `core_engine.dll` + patch imports) |
+| | `-CleanFlutter` | scrub all Flutter traces from the bundle (asset dir + exe path + plugin dlls), no source changes |
 | | `-OutputDir <path>` | custom artifact dir (default: `<project>/dist/<binary>`) |
 | android | `--apk` / `--aab` | build only APK or only AAB (default: both) |
 | | `--skip-build` | reuse existing outputs, just collect |
