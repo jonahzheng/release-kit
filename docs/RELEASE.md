@@ -133,10 +133,11 @@ release-kit publish windows -Obfuscate -CleanFlutter
 ### Android
 
 ```bash
-release-kit publish android [--apk] [--aab] [--skip-build]
+release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 ```
 
 - 默认构建 APK + AAB
+- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
 - 产物：`dist/<app>-<version>-android.apk / .aab` + sha256
 - 签名需在项目 `android/` 配置好 keystore（密码走环境变量）
 

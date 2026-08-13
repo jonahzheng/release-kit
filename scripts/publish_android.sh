@@ -1,15 +1,16 @@
 #!/bin/sh
 # release-kit: publish Android build (config-driven)
 # Usage:
-#   ./publish_android.sh [--apk] [--aab] [--skip-build]
+#   ./publish_android.sh [--apk] [--aab] [--skip-build] [--obfuscate]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 # Secrets: ANDROID_KEY_PASSWORD / ANDROID_STORE_PASSWORD env vars.
 #
 # Flags:
-#   default   build & collect APK + AAB
-#   --apk     only APK   (turns off AAB)
-#   --aab     only AAB   (turns off APK)
+#   default     build & collect APK + AAB
+#   --apk       only APK   (turns off AAB)
+#   --aab       only AAB   (turns off APK)
 #   --skip-build  reuse existing build outputs, just collect artifacts
+#   --obfuscate   Dart obfuscated build (symbols in build/obfuscate_symbols)
 
 set -e
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
@@ -20,12 +21,14 @@ DO_AAB=1
 SAW_APK=0
 SAW_AAB=0
 SKIP_BUILD=0
+OBFUSCATE=0
 for arg in "$@"; do
   case "$arg" in
     --apk) DO_APK=1; SAW_APK=1 ;;
     --aab) DO_AAB=1; SAW_AAB=1 ;;
     --skip-build) SKIP_BUILD=1 ;;
-    *) echo "usage: $0 [--apk] [--aab] [--skip-build]" >&2; exit 2 ;;
+    --obfuscate) OBFUSCATE=1 ;;
+    *) echo "usage: $0 [--apk] [--aab] [--skip-build] [--obfuscate]" >&2; exit 2 ;;
   esac
 done
 # "--apk" alone means APK only; "--aab" alone means AAB only; both given = both
@@ -51,20 +54,24 @@ read_version "$PUBSPEC"
 echo "==> release-kit publish_android"
 echo "    project: $PROJECT_ROOT"
 echo "    app: $APP_NAME ($VERSION)  bundle: $BUNDLE_ID"
-echo "    targets: $(if [ "$DO_APK" = 1 ]; then printf 'apk '; fi)$(if [ "$DO_AAB" = 1 ]; then printf 'aab'; fi)"
+echo "    targets: $(if [ "$DO_APK" = 1 ]; then printf 'apk '; fi)$(if [ "$DO_AAB" = 1 ]; then printf 'aab'; fi)  obfuscate: $(if [ "$OBFUSCATE" = 1 ]; then printf 'on'; else printf 'off'; fi)"
 
 DEFINES=$(dart_defines)
+OBF_ARGS=""
+if [ "$OBFUSCATE" = "1" ]; then
+  OBF_ARGS="--obfuscate --split-debug-info=./build/obfuscate_symbols"
+fi
 
 if [ "$SKIP_BUILD" = "0" ]; then
   if [ "$DO_APK" = "1" ]; then
     echo "==> flutter build apk --release"
     # shellcheck disable=SC2086
-    flutter build apk --release $DEFINES
+    flutter build apk --release $OBF_ARGS $DEFINES
   fi
   if [ "$DO_AAB" = "1" ]; then
     echo "==> flutter build appbundle --release"
     # shellcheck disable=SC2086
-    flutter build appbundle --release $DEFINES
+    flutter build appbundle --release $OBF_ARGS $DEFINES
   fi
 fi
 

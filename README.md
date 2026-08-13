@@ -44,7 +44,7 @@ Commands target the current directory. Add `-p <project-root>` (anywhere in the 
 
 ```bash
 release-kit init -p /path/to/myapp
-release-kit publish android -Obfuscate -p /path/to/myapp
+release-kit publish android --obfuscate -p /path/to/myapp
 ```
 
 ## Platform Flags
@@ -60,6 +60,7 @@ release-kit publish android -Obfuscate -p /path/to/myapp
 | | `-OutputDir <path>` | custom artifact dir (default: `<project>/dist/<binary>`) |
 | android | `--apk` / `--aab` | build only APK or only AAB (default: both) |
 | | `--skip-build` | reuse existing outputs, just collect |
+| | `--obfuscate` | Dart obfuscated release build (symbols in `build/obfuscate_symbols`) |
 | linux | `--skip-build` | reuse existing outputs, just package |
 | | `--appimage` | also build an AppImage (requires `linuxdeploy` on PATH) |
 | macos / ios | `--skip-build` | reuse existing outputs, just package |

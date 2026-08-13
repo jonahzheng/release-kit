@@ -36,6 +36,26 @@ if (-not $Command) { Show-Usage }
 $ProjectArg = $p
 $argsList = @($RemainingArgs)
 
+# Run a shell script via bash (Windows has no native .sh execution).
+function Invoke-Sh {
+  param(
+    [string]$Script,
+    [string[]]$ArgList
+  )
+  $bash = $null
+  foreach ($cand in @("C:\Program Files\Git\bin\bash.exe", "C:\Program Files\Git\usr\bin\bash.exe", "bash")) {
+    if (Get-Command $cand -ErrorAction SilentlyContinue) { $bash = $cand; break }
+  }
+  if (-not $bash) { throw "bash not found (needed for shell scripts). Install Git for Windows." }
+  # quote each arg so bash receives them verbatim (paths with spaces etc.)
+  $parts = @()
+  foreach ($a in $ArgList) { $parts += "'" + ($a -replace "\\", "/" -replace "'", "'\''") + "'" }
+  $scriptPath = $Script -replace "\\", "/"
+  $cmd = "'$scriptPath'" + $(if ($parts.Count) { " " + ($parts -join " ") } else { "" })
+  & $bash -c $cmd
+  return $LASTEXITCODE
+}
+
 if ($ProjectArg) {
   if (-not (Test-Path $ProjectArg)) { throw "Project root not found: $ProjectArg" }
   Push-Location $ProjectArg
@@ -82,10 +102,15 @@ try {
           }
           & (Join-Path $kitRoot "scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -SkipVerify:$srv -OutputDir $outDir
         }
-        "android" { & (Join-Path $kitRoot "scripts\publish_android.sh") @rest }
-        "macos"   { & (Join-Path $kitRoot "scripts\publish_macos.sh") @rest }
-        "linux"   { & (Join-Path $kitRoot "scripts\publish_linux.sh") @rest }
-        "ios"     { & (Join-Path $kitRoot "scripts\publish_ios.sh") @rest }
+        "android" {
+          # map the common -Obfuscate spelling to the android --obfuscate flag
+          $androidArgs = @()
+          foreach ($a in $rest) { if ($a -eq "-Obfuscate") { $androidArgs += "--obfuscate" } else { $androidArgs += $a } }
+          Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_android.sh") -ArgList $androidArgs
+        }
+        "macos"   { Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_macos.sh") -ArgList $rest }
+        "linux"   { Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_linux.sh") -ArgList $rest }
+        "ios"     { Invoke-Sh -Script (Join-Path $kitRoot "scripts\publish_ios.sh") -ArgList $rest }
         default   { Write-Host "unknown platform: $platform" -ForegroundColor Red; Show-Usage }
       }
       break
