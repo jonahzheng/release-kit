@@ -1,7 +1,7 @@
 #!/bin/sh
 # release-kit: publish macOS build (config-driven)
 # Usage:
-#   ./publish_macos.sh [--skip-build]
+#   ./publish_macos.sh [--skip-build] [--obfuscate] [--no-codesign]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 #
 # Produces a distributable .dmg: stages the .app alongside an Applications
@@ -9,13 +9,27 @@
 #
 # Note: macOS release builds need code signing config (Developer ID) for
 # distribution; without it the .app runs locally only.
+#
+# Flags:
+#   --skip-build   reuse existing build outputs, just package the .app into a .dmg
+#   --obfuscate    Dart obfuscated build (symbols in build/obfuscate_symbols)
+#   --no-codesign  build without code signing (CI / local smoke test)
 
 set -e
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 . "$KIT_ROOT/scripts/common.sh"
 
 SKIP_BUILD=0
-[ "$1" = "--skip-build" ] && SKIP_BUILD=1
+OBFUSCATE=0
+NO_CODESIGN=0
+while [ $# -gt 0 ]; do
+  case "$1" in
+    --skip-build) SKIP_BUILD=1 ;;
+    --obfuscate) OBFUSCATE=1 ;;
+    --no-codesign) NO_CODESIGN=1 ;;
+    *) echo "usage: $0 [--skip-build] [--obfuscate] [--no-codesign]" >&2; exit 2 ;;
+  esac
+done
 
 PROJECT_ROOT=$(resolve_project)
 cd "$PROJECT_ROOT"
@@ -28,16 +42,26 @@ read_version "$PROJECT_ROOT/pubspec.yaml"
 
 echo "==> release-kit publish_macos"
 echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION)"
+echo "    obfuscate: $(if [ "$OBFUSCATE" = 1 ]; then printf 'on'; else printf 'off'; fi)"
 
 if [ "$SKIP_BUILD" = "0" ]; then
+  OBF_ARGS=""
+  if [ "$OBFUSCATE" = "1" ]; then
+    OBF_ARGS="--obfuscate --split-debug-info=./build/obfuscate_symbols"
+  fi
+  CODESIGN_ARGS=""
+  if [ "$NO_CODESIGN" = "1" ]; then
+    CODESIGN_ARGS="--no-codesign"
+  fi
   echo "==> flutter build macos --release"
   # shellcheck disable=SC2086
-  flutter build macos --release $(dart_defines)
+  flutter build macos --release $OBF_ARGS $CODESIGN_ARGS $(dart_defines)
 fi
 
-APP_BUNDLE="$PROJECT_ROOT/build/macos/Build/Products/Release/$APP_NAME.app"
-if [ ! -d "$APP_BUNDLE" ]; then
-  echo "app bundle not found: $APP_BUNDLE" >&2
+# the .app name comes from the Xcode product name (not app.name), locate robustly
+APP_BUNDLE=$(find "$PROJECT_ROOT/build/macos/Build/Products/Release" -maxdepth 1 -name "*.app" -print 2>/dev/null | sort | tail -n1)
+if [ -z "$APP_BUNDLE" ] || [ ! -d "$APP_BUNDLE" ]; then
+  echo "app bundle not found under $PROJECT_ROOT/build/macos/Build/Products/Release" >&2
   exit 1
 fi
 

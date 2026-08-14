@@ -163,12 +163,34 @@ release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 > ```
 > 其余非 Windows 平台（macOS/Linux/iOS）在 Windows 上通过 Git Bash 执行 `.sh` 脚本。
 
-### macOS / iOS / Linux（骨架）
+### iOS
+
+```bash
+release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] [--no-codesign]
+```
+
+- 需 **macOS + Xcode + iOS 签名**（Apple Developer 证书/描述文件），产物为 `.ipa`（TestFlight / App Store 分发）
+- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
+- `--export-method`：`ad-hoc` | `development` | `enterprise` | `app-store`（默认 `app-store`）
+- `--no-codesign`：免签名构建（CI / 本地冒烟测试）
+- 产物：`dist/<app>-<version>-ios.ipa` + sha256
+
+### macOS
+
+```bash
+release-kit publish macos [--skip-build] [--obfuscate] [--no-codesign]
+```
+
+- 需 **macOS + Xcode**；通过 `hdiutil`（UDZO）生成拖拽安装的 `.dmg`
+- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
+- `--no-codesign`：免签名构建（CI / 本地冒烟测试）
+- 注意：正式分发需要 Developer ID 签名配置，否则 `.app` 仅本机可运行
+- 产物：`dist/<app>-<version>-macos.dmg` + sha256
+
+### Linux（骨架）
 
 脚本含配置读取 + `flutter build` 命令 + 产物路径，但**尚未在对应环境验证**，需按需完善：
 
-- macOS：`.app` → dmg（`hdiutil`）
-- iOS：`flutter build ipa` → `.ipa`（需 Xcode 签名）
 - Linux：bundle → tar.gz / AppImage
 
 ## 四、常见问题

@@ -163,12 +163,34 @@ release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 > ```
 > Other non-Windows platforms (macOS/Linux/iOS) run via Git Bash on Windows.
 
-### macOS / iOS / Linux (skeleton)
+### iOS
 
-The scripts contain config reading + `flutter build` commands + artifact paths, but are **not yet verified in the corresponding environments** — refine as needed:
+```bash
+release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] [--no-codesign]
+```
 
-- macOS: `.app` → dmg (`hdiutil`)
-- iOS: `flutter build ipa` → `.ipa` (needs Xcode signing)
+- Requires **macOS + Xcode + iOS signing** (Apple Developer cert/profile); produces an `.ipa` for TestFlight / App Store
+- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
+- `--export-method`: `ad-hoc` | `development` | `enterprise` | `app-store` (default `app-store`)
+- `--no-codesign`: build without code signing (CI / local smoke test)
+- Artifacts: `dist/<app>-<version>-ios.ipa` + sha256
+
+### macOS
+
+```bash
+release-kit publish macos [--skip-build] [--obfuscate] [--no-codesign]
+```
+
+- Requires **macOS + Xcode**; produces a drag-to-install `.dmg` via `hdiutil` (UDZO)
+- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
+- `--no-codesign`: build without code signing (CI / local smoke test)
+- Note: distribution needs a Developer ID signing config; without it the `.app` runs locally only
+- Artifacts: `dist/<app>-<version>-macos.dmg` + sha256
+
+### Linux (skeleton)
+
+The script contains config reading + `flutter build` commands + artifact paths, but is **not yet verified in the corresponding environment** — refine as needed:
+
 - Linux: bundle → tar.gz / AppImage
 
 ## 4. FAQ
