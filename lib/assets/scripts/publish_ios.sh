@@ -66,16 +66,30 @@ if [ "$SKIP_BUILD" = "0" ]; then
   flutter build ipa --release $OBF_ARGS $EXPORT_ARGS $(dart_defines)
 fi
 
-# the .ipa's filename comes from the Xcode product name (not app.name),
-# so locate it robustly under build/ios/ipa
-IPA=$(find "$PROJECT_ROOT/build/ios/ipa" -maxdepth 1 -name "*.ipa" -print 2>/dev/null | sort | tail -n1)
-if [ -z "$IPA" ] || [ ! -f "$IPA" ]; then
-  echo "ipa not found under $PROJECT_ROOT/build/ios/ipa" >&2
-  exit 1
-fi
-
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"
-IPA_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-ios.ipa"
-cp "$IPA" "$IPA_OUT"
-print_artifact "$IPA_OUT"
+
+if [ "$NO_CODESIGN" = "1" ]; then
+  # --no-codesign stops at the .xcarchive (no .ipa is produced)
+  ARCHIVE=$(find "$PROJECT_ROOT/build/ios/archive" -maxdepth 1 -type d -name "*.xcarchive" -print 2>/dev/null | sort | tail -n1)
+  if [ -z "$ARCHIVE" ] || [ ! -d "$ARCHIVE" ]; then
+    echo "xcarchive not found under $PROJECT_ROOT/build/ios/archive" >&2
+    exit 1
+  fi
+  ARCHIVE_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-ios.xcarchive"
+  cp -R "$ARCHIVE" "$ARCHIVE_OUT"
+  echo "==> artifact: $ARCHIVE_OUT"
+  echo "    size: $(du -sh "$ARCHIVE_OUT" | awk '{print $1}')"
+  echo "    (unsigned build - codesign manually to deploy)"
+else
+  # the .ipa's filename comes from the Xcode product name (not app.name),
+  # so locate it robustly under build/ios/ipa
+  IPA=$(find "$PROJECT_ROOT/build/ios/ipa" -maxdepth 1 -name "*.ipa" -print 2>/dev/null | sort | tail -n1)
+  if [ -z "$IPA" ] || [ ! -f "$IPA" ]; then
+    echo "ipa not found under $PROJECT_ROOT/build/ios/ipa" >&2
+    exit 1
+  fi
+  IPA_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-ios.ipa"
+  cp "$IPA" "$IPA_OUT"
+  print_artifact "$IPA_OUT"
+fi
 echo "==> done"
