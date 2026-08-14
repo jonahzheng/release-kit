@@ -89,7 +89,7 @@ release-kit publish android --obfuscate -p /path/to/myapp
 | android | `--apk` / `--aab` `--skip-build` `--obfuscate` |
 | linux | `--skip-build` `--appimage` |
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |
-| macos | `--skip-build` `--obfuscate` `--no-codesign` |
+| macos | `--skip-build` `--obfuscate` |
 
 > On Windows, `-Obfuscate` also works for android (auto-mapped to `--obfuscate`). All platforms accept `--no-icons`.
 

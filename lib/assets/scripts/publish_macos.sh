@@ -1,19 +1,19 @@
 #!/bin/sh
 # release-kit: publish macOS build (config-driven)
 # Usage:
-#   ./publish_macos.sh [--skip-build] [--obfuscate] [--no-codesign]
+#   ./publish_macos.sh [--skip-build] [--obfuscate]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 #
 # Produces a distributable .dmg: stages the .app alongside an Applications
 # symlink (drag-to-install) and compresses with hdiutil (UDZO).
 #
 # Note: macOS release builds need code signing config (Developer ID) for
-# distribution; without it the .app runs locally only.
+# distribution; without it the .app runs locally only. There is no
+# --no-codesign flag for `flutter build macos`.
 #
 # Flags:
 #   --skip-build   reuse existing build outputs, just package the .app into a .dmg
 #   --obfuscate    Dart obfuscated build (symbols in build/obfuscate_symbols)
-#   --no-codesign  build without code signing (CI / local smoke test)
 
 set -e
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
@@ -21,13 +21,11 @@ KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 
 SKIP_BUILD=0
 OBFUSCATE=0
-NO_CODESIGN=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --skip-build) SKIP_BUILD=1; shift ;;
     --obfuscate) OBFUSCATE=1; shift ;;
-    --no-codesign) NO_CODESIGN=1; shift ;;
-    *) echo "usage: $0 [--skip-build] [--obfuscate] [--no-codesign]" >&2; exit 2 ;;
+    *) echo "usage: $0 [--skip-build] [--obfuscate]" >&2; exit 2 ;;
   esac
 done
 
@@ -49,13 +47,9 @@ if [ "$SKIP_BUILD" = "0" ]; then
   if [ "$OBFUSCATE" = "1" ]; then
     OBF_ARGS="--obfuscate --split-debug-info=./build/obfuscate_symbols"
   fi
-  CODESIGN_ARGS=""
-  if [ "$NO_CODESIGN" = "1" ]; then
-    CODESIGN_ARGS="--no-codesign"
-  fi
   echo "==> flutter build macos --release"
   # shellcheck disable=SC2086
-  flutter build macos --release $OBF_ARGS $CODESIGN_ARGS $(dart_defines)
+  flutter build macos --release $OBF_ARGS $(dart_defines)
 fi
 
 # the .app name comes from the Xcode product name (not app.name), locate robustly

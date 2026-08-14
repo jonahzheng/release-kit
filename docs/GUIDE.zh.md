@@ -178,13 +178,12 @@ release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] 
 ### macOS
 
 ```bash
-release-kit publish macos [--skip-build] [--obfuscate] [--no-codesign]
+release-kit publish macos [--skip-build] [--obfuscate]
 ```
 
 - 需 **macOS + Xcode**；通过 `hdiutil`（UDZO）生成拖拽安装的 `.dmg`
 - `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
-- `--no-codesign`：免签名构建（CI / 本地冒烟测试）
-- 注意：正式分发需要 Developer ID 签名配置，否则 `.app` 仅本机可运行
+- 注意：正式分发需要 Developer ID 签名配置，否则 `.app` 仅本机可运行（`flutter build macos` 无 `--no-codesign`）
 - 产物：`dist/<app>-<version>-macos.dmg` + sha256
 
 ### Linux（骨架）

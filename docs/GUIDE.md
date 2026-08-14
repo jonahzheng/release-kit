@@ -178,13 +178,12 @@ release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] 
 ### macOS
 
 ```bash
-release-kit publish macos [--skip-build] [--obfuscate] [--no-codesign]
+release-kit publish macos [--skip-build] [--obfuscate]
 ```
 
 - Requires **macOS + Xcode**; produces a drag-to-install `.dmg` via `hdiutil` (UDZO)
 - `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
-- `--no-codesign`: build without code signing (CI / local smoke test)
-- Note: distribution needs a Developer ID signing config; without it the `.app` runs locally only
+- Note: distribution needs a Developer ID signing config; without it the `.app` runs locally only (`flutter build macos` has no `--no-codesign`)
 - Artifacts: `dist/<app>-<version>-macos.dmg` + sha256
 
 ### Linux (skeleton)
