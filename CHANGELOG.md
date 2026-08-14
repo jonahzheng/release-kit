@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.6
+
+- Docs: detailed per-flag reference for every platform in GUIDE (common flags `-p`/`--no-icons` + windows/android/ios/macos/linux tables).
+
 ## 0.1.5
 
 - Docs: add pub.dev badge/link to README; document `release-kit bump` and Windows `-NoRename` in README/GUIDE.

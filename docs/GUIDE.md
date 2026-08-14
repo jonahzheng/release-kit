@@ -39,6 +39,13 @@ release-kit publish android -p /path/to/myapp
 release-kit publish windows -Obfuscate -p /path/to/myapp
 ```
 
+### Common flags (all platforms)
+
+| Flag | Description |
+|---|---|
+| `-p <project-root>` / `--project <project-root>` | Target another Flutter project from any directory (allowed anywhere in the args). Defaults to the current directory. |
+| `--no-icons` | Skip launcher-icon regeneration. By default every `publish` regenerates icons from `app.logo` (via `generate_icons.sh`/`.ps1`) when the source is newer than the existing icons. Use this to always skip icon work (e.g. in CI, or when `app.logo` is unset and you don't want the warning). |
+
 ## 1. Version Management
 
 ### Bump rules (`bin/bump_version.dart`)
@@ -128,11 +135,19 @@ Skipped when `app.logo` is unset; errors out when the source image is missing. O
 ### Windows
 
 ```bash
-release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify]
+release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify] [-OutputDir <path>]
 ```
 
-- `-Obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
-- `-SkipVerify`: skip the pre-zip "exe launches" smoke test (on by default; warns early if the build is broken)
+| Flag | Description |
+|---|---|
+| `-Obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
+| `-SkipBuild` | Reuse existing `build\windows\x64\runner\Release` outputs, just collect/package artifacts |
+| `-NoRename` | Force hardening rename off even if `hardening.enabled: true` is set in config |
+| `-Harden` | Force hardening rename on regardless of config (`flutter_windows.dll → core_engine.dll`, auto-patch EXE/plugin DLL import tables) |
+| `-CleanFlutter` | Implies hardening; additionally scrub Flutter traces from the bundle (see below). Mutually exclusive with `-NoRename` (`-NoRename` wins) |
+| `-SkipVerify` | Skip the pre-zip "exe launches" smoke test (on by default; warns early if the build is broken) |
+| `-OutputDir <path>` | Override the artifact staging/zip output directory |
+
 - Artifacts: `dist/<app>-<version>-win64.zip` + sha256
 - Hardening rename (with `-Harden` or `hardening.enabled=true`): `flutter_windows.dll → core_engine.dll`, auto-patching EXE/plugin DLL import tables
 
@@ -159,8 +174,14 @@ The bundle no longer contains any `flutter` filenames, and **the packaged exe is
 release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 ```
 
-- Default builds APK + AAB
-- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
+| Flag | Description |
+|---|---|
+| `--apk` | Build only the APK (turns off AAB) |
+| `--aab` | Build only the AAB (turns off APK) |
+| `--skip-build` | Reuse existing build outputs, just collect artifacts |
+| `--obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
+
+Default builds both APK + AAB.
 - Artifacts: `dist/<app>-<version>-android.apk / .aab` + sha256
 - Signing must be configured with a keystore under your project's `android/` (passwords via env vars)
 
@@ -177,10 +198,14 @@ release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] [--no-codesign]
 ```
 
+| Flag | Description |
+|---|---|
+| `--skip-build` | Reuse existing build outputs, just collect the `.ipa` |
+| `--obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
+| `--export-method <method>` | `ad-hoc` \| `development` \| `enterprise` \| `app-store` (default `app-store`) |
+| `--no-codesign` | Build without code signing (CI / local smoke test); collects the `.xcarchive` since Flutter skips `.ipa` generation when unsigned |
+
 - Requires **macOS + Xcode + iOS signing** (Apple Developer cert/profile); produces an `.ipa` for TestFlight / App Store
-- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
-- `--export-method`: `ad-hoc` | `development` | `enterprise` | `app-store` (default `app-store`)
-- `--no-codesign`: build without code signing (CI / local smoke test)
 - Artifacts: `dist/<app>-<version>-ios.ipa` + sha256
 
 ### macOS
@@ -189,8 +214,12 @@ release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] 
 release-kit publish macos [--skip-build] [--obfuscate]
 ```
 
+| Flag | Description |
+|---|---|
+| `--skip-build` | Reuse existing build outputs, just package the `.app` into a `.dmg` |
+| `--obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
+
 - Requires **macOS + Xcode**; produces a drag-to-install `.dmg` via `hdiutil` (UDZO)
-- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
 - Note: distribution needs a Developer ID signing config; without it the `.app` runs locally only (`flutter build macos` has no `--no-codesign`)
 - Artifacts: `dist/<app>-<version>-macos.dmg` + sha256
 
@@ -200,12 +229,16 @@ release-kit publish macos [--skip-build] [--obfuscate]
 release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appimage]
 ```
 
+| Flag | Description |
+|---|---|
+| `--skip-build` | Reuse existing build outputs, just package artifacts |
+| `--obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
+| `--deb` | Build a Debian/Ubuntu package via `dpkg-deb` (desktop entry + hi-color icon included; `dpkg-deb` must be installed) |
+| `--rpm` | Build a Fedora/RHEL package via `rpmbuild` (`rpmbuild` must be installed) |
+| `--appimage` | Build an AppImage via `linuxdeploy` (must be installed; see https://github.com/linuxdeploy/linuxdeploy) |
+
 - Requires a Linux host with Flutter Linux desktop support (GTK toolchain)
-- Default output: portable `dist/<app>-<version>-linux-x64.tar.gz` (release bundle)
-- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
-- `--deb`: Debian/Ubuntu package via `dpkg-deb` (desktop entry + hi-color icon included)
-- `--rpm`: Fedora/RHEL package via `rpmbuild`
-- `--appimage`: AppImage via `linuxdeploy` (must be installed)
+- Default output: portable `dist/<app>-<version>-linux-x64.tar.gz` (release bundle) — always produced
 - Desktop-entry categories come from `linux.desktopCategories` (default `Utility;`)
 - Icon source for the packages: `linux/runner/my_icon.png` (auto-generated from `app.logo`)
 - Artifacts: `dist/<app>-<version>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256

@@ -95,7 +95,9 @@ release-kit publish android --obfuscate -p /path/to/myapp
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |
 | macos | `--skip-build` `--obfuscate` |
 
-> Windows 入口下，`-Obfuscate` 对 android 同样生效（自动映射为 `--obfuscate`）。所有平台均可加 `--no-icons`。
+> Windows 入口下，`-Obfuscate` 对 android 同样生效（自动映射为 `--obfuscate`）。所有平台均可加 `--no-icons` 与 `-p <项目根>`。
+
+> 每个平台各参数的详细说明：[docs/GUIDE.zh.md](docs/GUIDE.zh.md) → 「三、打包」。
 
 ---
 

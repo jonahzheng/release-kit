@@ -39,6 +39,13 @@ release-kit publish android -p /path/to/myapp
 release-kit publish windows -Obfuscate -p /path/to/myapp
 ```
 
+### 通用参数（所有平台）
+
+| 参数 | 说明 |
+|---|---|
+| `-p <项目根>` / `--project <项目根>` | 从任意目录指向另一个 Flutter 项目（可出现在参数任意位置）。默认作用于当前目录。 |
+| `--no-icons` | 跳过启动图标重新生成。默认每次 `publish` 都会在 `app.logo` 比现有图标新时重新生成图标（通过 `generate_icons.sh`/`.ps1`）。CI 或未配置 `app.logo` 不想看到提示时用它跳过。 |
+
 ## 一、版本号管理
 
 ### 递增规则（`bin/bump_version.dart`）
@@ -128,11 +135,19 @@ app.logo: assets/logo.png
 ### Windows
 
 ```bash
-release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify]
+release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify] [-OutputDir <路径>]
 ```
 
-- `-Obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
-- `-SkipVerify`：跳过打包前的 exe 启动冒烟测试（默认会验证 exe 能否正常启动，构建损坏时提前告警）
+| 参数 | 说明 |
+|---|---|
+| `-Obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
+| `-SkipBuild` | 复用现有 `build\windows\x64\runner\Release` 产物，只收集/打包 |
+| `-NoRename` | 即使配置了 `hardening.enabled: true` 也强制关闭加固改名 |
+| `-Harden` | 无视配置强制开启加固改名（`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表） |
+| `-CleanFlutter` | 隐含加固；额外清理产物中的 Flutter 痕迹（见下）。与 `-NoRename` 互斥（后者优先） |
+| `-SkipVerify` | 跳过打包前的 exe 启动冒烟测试（默认开启，构建损坏时提前告警） |
+| `-OutputDir <路径>` | 覆盖产物暂存/zip 输出目录 |
+
 - 产物：`dist/<app>-<version>-win64.zip` + sha256
 - 加固改名（`-Harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
 
@@ -159,8 +174,14 @@ release-kit publish windows -Obfuscate -CleanFlutter
 release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 ```
 
-- 默认构建 APK + AAB
-- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
+| 参数 | 说明 |
+|---|---|
+| `--apk` | 只打 APK（关闭 AAB） |
+| `--aab` | 只打 AAB（关闭 APK） |
+| `--skip-build` | 复用现有构建产物，只收集 |
+| `--obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
+
+默认同时构建 APK + AAB。
 - 产物：`dist/<app>-<version>-android.apk / .aab` + sha256
 - 签名需在项目 `android/` 配置好 keystore（密码走环境变量）
 
@@ -177,10 +198,14 @@ release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] [--no-codesign]
 ```
 
+| 参数 | 说明 |
+|---|---|
+| `--skip-build` | 复用现有构建产物，只收集 `.ipa` |
+| `--obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
+| `--export-method <method>` | `ad-hoc` \| `development` \| `enterprise` \| `app-store`（默认 `app-store`） |
+| `--no-codesign` | 免签名构建（CI / 本地冒烟测试）；因 Flutter 免签名时不生成 `.ipa`，改收集 `.xcarchive` |
+
 - 需 **macOS + Xcode + iOS 签名**（Apple Developer 证书/描述文件），产物为 `.ipa`（TestFlight / App Store 分发）
-- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
-- `--export-method`：`ad-hoc` | `development` | `enterprise` | `app-store`（默认 `app-store`）
-- `--no-codesign`：免签名构建（CI / 本地冒烟测试）
 - 产物：`dist/<app>-<version>-ios.ipa` + sha256
 
 ### macOS
@@ -189,8 +214,12 @@ release-kit publish ios [--skip-build] [--obfuscate] [--export-method <method>] 
 release-kit publish macos [--skip-build] [--obfuscate]
 ```
 
+| 参数 | 说明 |
+|---|---|
+| `--skip-build` | 复用现有构建产物，只把 `.app` 打成 `.dmg` |
+| `--obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
+
 - 需 **macOS + Xcode**；通过 `hdiutil`（UDZO）生成拖拽安装的 `.dmg`
-- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
 - 注意：正式分发需要 Developer ID 签名配置，否则 `.app` 仅本机可运行（`flutter build macos` 无 `--no-codesign`）
 - 产物：`dist/<app>-<version>-macos.dmg` + sha256
 
@@ -200,12 +229,16 @@ release-kit publish macos [--skip-build] [--obfuscate]
 release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appimage]
 ```
 
+| 参数 | 说明 |
+|---|---|
+| `--skip-build` | 复用现有构建产物，只打包 |
+| `--obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
+| `--deb` | 通过 `dpkg-deb` 打 Debian/Ubuntu 包（含桌面项 + hi-color 图标；需已安装 `dpkg-deb`） |
+| `--rpm` | 通过 `rpmbuild` 打 Fedora/RHEL 包（需已安装 `rpmbuild`） |
+| `--appimage` | 通过 `linuxdeploy` 打 AppImage（需安装；见 https://github.com/linuxdeploy/linuxdeploy） |
+
 - 需 Linux 主机，Flutter Linux 桌面支持（GTK 工具链）
-- 默认产物：便携 `dist/<app>-<version>-linux-x64.tar.gz`（release bundle）
-- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
-- `--deb`：通过 `dpkg-deb` 打 Debian/Ubuntu 包（含桌面项 + hi-color 图标）
-- `--rpm`：通过 `rpmbuild` 打 Fedora/RHEL 包
-- `--appimage`：通过 `linuxdeploy` 打 AppImage（需安装）
+- 默认始终产出便携 `dist/<app>-<version>-linux-x64.tar.gz`（release bundle）
 - 桌面项分类来自 `linux.desktopCategories`（默认 `Utility;`）
 - 包内图标来源：`linux/runner/my_icon.png`（由 `app.logo` 自动生成）
 - 产物：`dist/<app>-<version>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256

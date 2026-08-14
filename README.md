@@ -95,7 +95,9 @@ release-kit publish android --obfuscate -p /path/to/myapp
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |
 | macos | `--skip-build` `--obfuscate` |
 
-> On Windows, `-Obfuscate` also works for android (auto-mapped to `--obfuscate`). All platforms accept `--no-icons`.
+> On Windows, `-Obfuscate` also works for android (auto-mapped to `--obfuscate`). All platforms accept `--no-icons` and `-p <project-root>`.
+
+> Detailed per-flag descriptions for every platform: **[docs/GUIDE.md](docs/GUIDE.md) → Packaging**.
 
 ---
 
