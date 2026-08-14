@@ -6,10 +6,7 @@ build/
 
 # Local-only planning docs (not pushed to GitHub)
 docs/PUBLISH-PUB-DEV.md
-promo/announcement.en.md
-promo/announcement.zh.md
-promo/demo-materials.md
-promo/social-posts.md
+promo/
 
 # OS
 Thumbs.db
