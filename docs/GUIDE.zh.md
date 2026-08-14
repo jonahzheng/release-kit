@@ -95,6 +95,7 @@ release-kit init
 | `hardening.assetDir` | 资源目录新名 |
 | `android.keystore` | keystore 路径 |
 | `android.keyAlias` | keystore 别名 |
+| `linux.desktopCategories` | `.deb`/`.rpm` 桌面项分类（默认 `Utility;`） |
 
 密钥密码走环境变量，不入库：`ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`。
 
@@ -112,6 +113,7 @@ app.logo: assets/logo.png
 - iOS：`ios/Runner/Assets.xcassets/AppIcon.appiconset/`
 - macOS：`macos/Runner/Assets.xcassets/AppIcon.appiconset/`
 - Windows：`windows/runner/resources/app_icon.ico`
+- Linux：`linux/runner/my_icon.png`（ImageMagick 缩放到 512×512，无则原样复制）
 
 未设置 `app.logo` 时跳过；源图缺失时报错提示。首次使用会自动添加 `flutter_launcher_icons` 到 dev_dependencies。
 
@@ -186,11 +188,21 @@ release-kit publish macos [--skip-build] [--obfuscate]
 - 注意：正式分发需要 Developer ID 签名配置，否则 `.app` 仅本机可运行（`flutter build macos` 无 `--no-codesign`）
 - 产物：`dist/<app>-<version>-macos.dmg` + sha256
 
-### Linux（骨架）
+### Linux
 
-脚本含配置读取 + `flutter build` 命令 + 产物路径，但**尚未在对应环境验证**，需按需完善：
+```bash
+release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appimage]
+```
 
-- Linux：bundle → tar.gz / AppImage
+- 需 Linux 主机，Flutter Linux 桌面支持（GTK 工具链）
+- 默认产物：便携 `dist/<app>-<version>-linux-x64.tar.gz`（release bundle）
+- `--obfuscate`：Dart 混淆构建（符号存 `build/obfuscate_symbols`）
+- `--deb`：通过 `dpkg-deb` 打 Debian/Ubuntu 包（含桌面项 + hi-color 图标）
+- `--rpm`：通过 `rpmbuild` 打 Fedora/RHEL 包
+- `--appimage`：通过 `linuxdeploy` 打 AppImage（需安装）
+- 桌面项分类来自 `linux.desktopCategories`（默认 `Utility;`）
+- 包内图标来源：`linux/runner/my_icon.png`（由 `app.logo` 自动生成）
+- 产物：`dist/<app>-<version>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
 
 ## 四、常见问题
 

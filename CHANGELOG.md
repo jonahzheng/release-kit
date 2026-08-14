@@ -1,3 +1,11 @@
+# Changelog
+
+## 0.1.4
+
+- Linux publish implemented end-to-end: `--obfuscate`, `--deb` (dpkg-deb), `--rpm` (rpmbuild), `--appimage`; desktop entry + hi-color icon from `linux/runner/my_icon.png`; `linux.desktopCategories` config key.
+- Linux window icon generation: resize `app.logo` → `linux/runner/my_icon.png` (ImageMagick when available).
+- Smoke test for the Linux path: `test/publish_linux_test.sh`.
+
 ## 0.1.3
 
 - Fix iOS/macOS flag parsing infinite loop (missing `shift`).

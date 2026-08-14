@@ -19,9 +19,6 @@ while [ $# -gt 0 ]; do
     *) echo "usage: $0 [-p <platform>]" >&2; exit 2 ;;
   esac
 done
-case "$PLATFORM" in
-  linux) echo "==> flutter_launcher_icons has no Linux icon targets - skipping"; exit 0 ;;
-esac
 
 PROJECT_ROOT=$(resolve_project)
 CONFIG_FILE=$(cfg_file "$PROJECT_ROOT")
@@ -45,13 +42,15 @@ for ic in \
   "windows/runner/resources/app_icon.ico" \
   "android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png" \
   "ios/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" \
-  "macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json"; do
+  "macos/Runner/Assets.xcassets/AppIcon.appiconset/Contents.json" \
+  "linux/runner/my_icon.png"; do
   case "$PLATFORM" in
     all) ;;
     windows) case "$ic" in windows/*) ;; *) continue ;; esac ;;
     android) case "$ic" in android/*) ;; *) continue ;; esac ;;
     ios)     case "$ic" in ios/*)     ;; *) continue ;; esac ;;
     macos)   case "$ic" in macos/*)   ;; *) continue ;; esac ;;
+    linux)   case "$ic" in linux/*)   ;; *) continue ;; esac ;;
     *) continue ;;
   esac
   if [ ! -f "$ic" ]; then NEED_GEN=1; break; fi
@@ -60,6 +59,29 @@ done
 if [ "$NEED_GEN" = "0" ]; then
   echo "==> icons already up to date (newer than $LOGO) - skipping"
   exit 0
+fi
+
+# --- Linux window icon ---
+# flutter_launcher_icons has no Linux target; the Flutter Linux runner reads
+# its window icon from linux/runner/my_icon.png. Resize the source logo with
+# ImageMagick when available, otherwise copy it as-is.
+if [ "$PLATFORM" = "all" ] || [ "$PLATFORM" = "linux" ]; then
+  mkdir -p "$PROJECT_ROOT/linux/runner"
+  LINUX_ICON="$PROJECT_ROOT/linux/runner/my_icon.png"
+  if command -v magick >/dev/null 2>&1; then
+    echo "==> linux icon: $LINUX_ICON (magick 512x512)"
+    magick "$LOGO" -resize 512x512 "$LINUX_ICON"
+  elif command -v convert >/dev/null 2>&1 && convert -version 2>/dev/null | grep -qi imagemagick; then
+    echo "==> linux icon: $LINUX_ICON (convert 512x512)"
+    convert "$LOGO" -resize 512x512 "$LINUX_ICON"
+  else
+    echo "==> linux icon: $LINUX_ICON (copied as-is, no ImageMagick found)"
+    cp "$LOGO" "$LINUX_ICON"
+  fi
+  if [ "$PLATFORM" = "linux" ]; then
+    echo "==> icons regenerated"
+    exit 0
+  fi
 fi
 
 # ensure flutter_launcher_icons is available as a dev dependency

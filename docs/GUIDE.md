@@ -95,6 +95,7 @@ Flat `key: value`, dot-namespace, `#` comments. All platform scripts read the sa
 | `hardening.assetDir` | new asset dir name |
 | `android.keystore` | keystore path |
 | `android.keyAlias` | keystore alias |
+| `linux.desktopCategories` | freedesktop desktop-entry categories for `.deb`/`.rpm` (default `Utility;`) |
 
 Keystore passwords come from env vars, never from the config: `ANDROID_KEY_PASSWORD` / `ANDROID_STORE_PASSWORD`.
 
@@ -112,6 +113,7 @@ Each `release-kit publish <platform>` first runs `lib/assets/scripts/generate_ic
 - iOS: `ios/Runner/Assets.xcassets/AppIcon.appiconset/`
 - macOS: `macos/Runner/Assets.xcassets/AppIcon.appiconset/`
 - Windows: `windows/runner/resources/app_icon.ico`
+- Linux: `linux/runner/my_icon.png` (resized 512×512 with ImageMagick, or copied as-is)
 
 Skipped when `app.logo` is unset; errors out when the source image is missing. On first use it auto-adds `flutter_launcher_icons` to dev_dependencies.
 
@@ -186,11 +188,21 @@ release-kit publish macos [--skip-build] [--obfuscate]
 - Note: distribution needs a Developer ID signing config; without it the `.app` runs locally only (`flutter build macos` has no `--no-codesign`)
 - Artifacts: `dist/<app>-<version>-macos.dmg` + sha256
 
-### Linux (skeleton)
+### Linux
 
-The script contains config reading + `flutter build` commands + artifact paths, but is **not yet verified in the corresponding environment** — refine as needed:
+```bash
+release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appimage]
+```
 
-- Linux: bundle → tar.gz / AppImage
+- Requires a Linux host with Flutter Linux desktop support (GTK toolchain)
+- Default output: portable `dist/<app>-<version>-linux-x64.tar.gz` (release bundle)
+- `--obfuscate`: Dart obfuscated build (symbols in `build/obfuscate_symbols`)
+- `--deb`: Debian/Ubuntu package via `dpkg-deb` (desktop entry + hi-color icon included)
+- `--rpm`: Fedora/RHEL package via `rpmbuild`
+- `--appimage`: AppImage via `linuxdeploy` (must be installed)
+- Desktop-entry categories come from `linux.desktopCategories` (default `Utility;`)
+- Icon source for the packages: `linux/runner/my_icon.png` (auto-generated from `app.logo`)
+- Artifacts: `dist/<app>-<version>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
 
 ## 4. FAQ
 

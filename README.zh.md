@@ -87,7 +87,7 @@ release-kit publish android --obfuscate -p /path/to/myapp
 |---|---|
 | windows | `-Obfuscate` `-SkipBuild` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
 | android | `--apk` / `--aab` `--skip-build` `--obfuscate` |
-| linux | `--skip-build` `--appimage` |
+| linux | `--skip-build` `--obfuscate` `--deb` `--rpm` `--appimage` |
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |
 | macos | `--skip-build` `--obfuscate` |
 

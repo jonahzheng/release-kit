@@ -15,6 +15,9 @@ build.dartDefine.SERVER_URL: https://api.example.com
 # --- Output ---
 output.dir: dist
 
+# --- Linux packaging (optional) ---
+# linux.desktopCategories: Utility;Development;   # freedesktop desktop-file categories (semicolon-separated)
+
 # --- Windows hardening (optional, default off) ---
 hardening.enabled: false
 hardening.engineDll: core_engine.dll

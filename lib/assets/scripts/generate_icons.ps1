@@ -113,9 +113,31 @@ try {
 
   # normalize target platform ("" -> all)
   $p = if ($Platform) { $Platform.ToLower() } else { "all" }
-  if ($p -eq "linux") {
-    Write-Host "==> flutter_launcher_icons has no Linux icon targets - skipping"
-    exit 0
+
+  # --- Linux window icon ---
+  # flutter_launcher_icons has no Linux target; the Flutter Linux runner reads
+  # its window icon from linux/runner/my_icon.png. Resize with System.Drawing.
+  if ($p -eq "all" -or $p -eq "linux") {
+    $linuxIcon = Join-Path $proj "linux\runner\my_icon.png"
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $linuxIcon) | Out-Null
+    try {
+      $src = [System.Drawing.Image]::FromFile($logo)
+      $bmp = New-Object System.Drawing.Bitmap(512, 512)
+      $g = [System.Drawing.Graphics]::FromImage($bmp)
+      $g.InterpolationMode = [System.Drawing.Drawing2D.InterpolationMode]::HighQualityBicubic
+      $g.DrawImage($src, 0, 0, 512, 512)
+      $g.Dispose()
+      $bmp.Save($linuxIcon, [System.Drawing.Imaging.ImageFormat]::Png)
+      $bmp.Dispose(); $src.Dispose()
+      Write-Host "==> linux icon: $linuxIcon (512x512)"
+    } catch {
+      Write-Host "==> could not resize linux icon: $($_.Exception.Message)" -ForegroundColor Yellow
+      Copy-Item $logo $linuxIcon -Force
+    }
+    if ($p -eq "linux") {
+      Write-Host "==> icons regenerated"
+      exit 0
+    }
   }
 
   # platform representative icon path(s) used to decide freshness
@@ -124,6 +146,7 @@ try {
   if ($p -eq "all" -or $p -eq "android") { $targetIcons += (Get-ChildItem (Join-Path $proj "android\app\src\main\res\mipmap-xxxhdpi\ic_launcher.png") -ErrorAction SilentlyContinue | Select-Object -First 1).FullName }
   if ($p -eq "all" -or $p -eq "ios")     { $targetIcons += Join-Path $proj "ios\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json" }
   if ($p -eq "all" -or $p -eq "macos")   { $targetIcons += Join-Path $proj "macos\Runner\Assets.xcassets\AppIcon.appiconset\Contents.json" }
+  if ($p -eq "all" -or $p -eq "linux")   { $targetIcons += Join-Path $proj "linux\runner\my_icon.png" }
   $targetIcons = @($targetIcons | Where-Object { $_ })
 
   # skip if icons are already newer than the source logo (nothing changed)
