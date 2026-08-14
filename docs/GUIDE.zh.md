@@ -62,7 +62,13 @@ build 号（`+N`）每次提交 +1。
 ### 手动调用
 
 ```bash
-# 直接运行 Dart 脚本（release-kit 已精简为 init + publish，手动递增走这里）
+release-kit bump                          # 智能递增 + build+1
+release-kit bump --build-only             # 仅 build+1（发布锁定）
+```
+
+等价直接 Dart 调用（工具为 git clone 方式、非 pub.dev 安装时）：
+
+```bash
 dart run bin/bump_version.dart                # 智能递增 + build+1
 dart run bin/bump_version.dart --build-only   # 仅 build+1（发布锁定）
 ```

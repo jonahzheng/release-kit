@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.5
+
+- Docs: add pub.dev badge/link to README; document `release-kit bump` and Windows `-NoRename` in README/GUIDE.
+
 ## 0.1.4
 
 - Linux publish implemented end-to-end: `--obfuscate`, `--deb` (dpkg-deb), `--rpm` (rpmbuild), `--appimage`; desktop entry + hi-color icon from `linux/runner/my_icon.png`; `linux.desktopCategories` config key.

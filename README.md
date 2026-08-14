@@ -6,6 +6,9 @@
   <img src="https://img.shields.io/badge/Flutter-2DBCF2.svg?logo=flutter&logoColor=white" alt="Flutter">
   <img src="https://img.shields.io/badge/Platform-Windows%20Android%20macOS%20Linux%20iOS-blue.svg" alt="Platform">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+  <a href="https://pub.dev/packages/release_kit">
+    <img src="https://img.shields.io/pub/v/release_kit.svg" alt="pub.dev">
+  </a>
 </p>
 
 <p align="center">
@@ -22,7 +25,7 @@
 
 > **release-kit** — a Dart CLI package (on pub.dev) that versions bump automatically on `git commit`, drives every platform from one `release-kit.yaml`, and builds Windows / Android / macOS / Linux / iOS with one command.
 
-> Full usage manual: **[docs/GUIDE.md](docs/GUIDE.md)**
+> Full usage manual: **[docs/GUIDE.md](docs/GUIDE.md)**  ·  pub.dev: **[release_kit](https://pub.dev/packages/release_kit)**
 
 ---
 
@@ -74,6 +77,7 @@ Windows? Use `release-kit.ps1` instead of `release-kit.sh`:
 |---|---|
 | `release-kit init` | copy `release-kit.yaml` template + install hook |
 | `release-kit publish <platform>` | build & package (windows / android / macos / linux / ios) |
+| `release-kit bump [--build-only]` | auto-increment the version in `pubspec.yaml` from staged changes |
 
 Add `-p <project-root>` (anywhere in the args) to target another project from any directory:
 
@@ -85,7 +89,7 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 | Platform | Flags |
 |---|---|
-| windows | `-Obfuscate` `-SkipBuild` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
+| windows | `-Obfuscate` `-SkipBuild` `-NoRename` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
 | android | `--apk` / `--aab` `--skip-build` `--obfuscate` |
 | linux | `--skip-build` `--obfuscate` `--deb` `--rpm` `--appimage` |
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |

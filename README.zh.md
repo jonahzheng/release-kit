@@ -6,6 +6,9 @@
   <img src="https://img.shields.io/badge/Flutter-2DBCF2.svg?logo=flutter&logoColor=white" alt="Flutter">
   <img src="https://img.shields.io/badge/Platform-Windows%20Android%20macOS%20Linux%20iOS-blue.svg" alt="Platform">
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="License">
+  <a href="https://pub.dev/packages/release_kit">
+    <img src="https://img.shields.io/pub/v/release_kit.svg" alt="pub.dev">
+  </a>
 </p>
 
 <p align="center">
@@ -22,7 +25,7 @@
 
 > **release-kit** — pub.dev 上的 Dart CLI 工具包：`git commit` 自动递增版本，一份 `release-kit.yaml` 驱动所有平台，一条命令打包 Windows / Android / macOS / Linux / iOS。
 
-> 完整使用手册：[docs/GUIDE.zh.md](docs/GUIDE.zh.md)
+> 完整使用手册：[docs/GUIDE.zh.md](docs/GUIDE.zh.md)  ·  pub.dev：[release_kit](https://pub.dev/packages/release_kit)
 
 ---
 
@@ -74,6 +77,7 @@ Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
 |---|---|
 | `release-kit init` | 生成 `release-kit.yaml` 模板 + 安装 hook |
 | `release-kit publish <platform>` | 打包（windows / android / macos / linux / ios） |
+| `release-kit bump [--build-only]` | 依据暂存改动自动递增 `pubspec.yaml` 版本 |
 
 加 `-p <项目根>`（参数任意位置）可从任意目录指向其他项目：
 
@@ -85,7 +89,7 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 | 平台 | 参数 |
 |---|---|
-| windows | `-Obfuscate` `-SkipBuild` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
+| windows | `-Obfuscate` `-SkipBuild` `-NoRename` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
 | android | `--apk` / `--aab` `--skip-build` `--obfuscate` |
 | linux | `--skip-build` `--obfuscate` `--deb` `--rpm` `--appimage` |
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |

@@ -62,7 +62,13 @@ The build number (`+N`) increments by 1 on every commit.
 ### Manual bump
 
 ```bash
-# run the Dart script directly (release-kit ships init + publish; bump manually via this)
+release-kit bump                          # smart bump + build+1
+release-kit bump --build-only             # only build+1 (release-lock)
+```
+
+Equivalent direct-Dart invocations (when the tool is cloned, not installed from pub.dev):
+
+```bash
 dart run bin/bump_version.dart                # smart bump + build+1
 dart run bin/bump_version.dart --build-only   # only build+1 (release-lock)
 ```
