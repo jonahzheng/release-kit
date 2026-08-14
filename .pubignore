@@ -1,3 +1,4 @@
 # Excluded from the pub.dev package (but kept in the git repo).
 README.zh.md
 docs/
+promo/
