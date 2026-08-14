@@ -1,3 +1,10 @@
+## 0.1.3
+
+- Fix iOS/macOS flag parsing infinite loop (missing `shift`).
+- iOS `--no-codesign`: collect the `.xcarchive` (Flutter skips `.ipa` generation when unsigned).
+- macOS: drop the unsupported `--no-codesign` flag.
+- Verified iOS and macOS publishing on a real macOS host.
+
 ## 0.1.2
 
 - iOS publish: add `--obfuscate`, `--export-method`, `--no-codesign`; robust `.ipa` discovery.
