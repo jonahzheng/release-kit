@@ -24,9 +24,9 @@ NO_CODESIGN=0
 EXPORT_METHOD=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --skip-build) SKIP_BUILD=1 ;;
-    --obfuscate) OBFUSCATE=1 ;;
-    --no-codesign) NO_CODESIGN=1 ;;
+    --skip-build) SKIP_BUILD=1; shift ;;
+    --obfuscate) OBFUSCATE=1; shift ;;
+    --no-codesign) NO_CODESIGN=1; shift ;;
     --export-method) EXPORT_METHOD="$2"; shift 2 ;;
     *) echo "usage: $0 [--skip-build] [--obfuscate] [--export-method <method>] [--no-codesign]" >&2; exit 2 ;;
   esac

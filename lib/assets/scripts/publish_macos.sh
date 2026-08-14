@@ -24,9 +24,9 @@ OBFUSCATE=0
 NO_CODESIGN=0
 while [ $# -gt 0 ]; do
   case "$1" in
-    --skip-build) SKIP_BUILD=1 ;;
-    --obfuscate) OBFUSCATE=1 ;;
-    --no-codesign) NO_CODESIGN=1 ;;
+    --skip-build) SKIP_BUILD=1; shift ;;
+    --obfuscate) OBFUSCATE=1; shift ;;
+    --no-codesign) NO_CODESIGN=1; shift ;;
     *) echo "usage: $0 [--skip-build] [--obfuscate] [--no-codesign]" >&2; exit 2 ;;
   esac
 done
