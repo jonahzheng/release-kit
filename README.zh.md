@@ -25,6 +25,8 @@
 
 > **release-kit** — pub.dev 上的 Dart CLI 工具包：`git commit` 自动递增版本，一份 `release-kit.yaml` 驱动所有平台，一条命令打包 Windows / Android / macOS / Linux / iOS。
 
+> 本项目脱胎于真实的工程实践，来自真实项目开发与多平台发布流程的日常打磨。
+
 > 完整使用手册：[docs/GUIDE.zh.md](docs/GUIDE.zh.md)  ·  pub.dev：[release_kit](https://pub.dev/packages/release_kit)
 
 ---

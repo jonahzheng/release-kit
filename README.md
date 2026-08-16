@@ -25,6 +25,8 @@
 
 > **release-kit** — a Dart CLI package (on pub.dev) that versions bump automatically on `git commit`, drives every platform from one `release-kit.yaml`, and builds Windows / Android / macOS / Linux / iOS with one command.
 
+> Born out of real engineering practice — refined through real-world development and a daily multi-platform release workflow.
+
 > Full usage manual: **[docs/GUIDE.md](docs/GUIDE.md)**  ·  pub.dev: **[release_kit](https://pub.dev/packages/release_kit)**
 
 ---
