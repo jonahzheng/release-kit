@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## 0.1.7
 
-- All `publish <platform>` flags now use the same double-dash spelling (`--obfuscate`, `--skip-build`, `--no-rename`, `--harden`, `--clean-flutter`, `--skip-verify`, `--output-dir`); the old Windows single-dash spellings (`-Obfuscate` etc.) are no longer accepted.
+- All `publish <platform>` flags now use the same double-dash long-flag spelling on every platform (`--obfuscate`, `--skip-build`, `--no-rename`, `--harden`, `--clean-flutter`, `--skip-verify`, `--output-dir`). The old Windows single-dash spellings (`-Obfuscate` etc.) are no longer accepted.
 
 ## 0.1.6
 
