@@ -123,7 +123,7 @@ Write-Host "    clean-flutter: $(if ($CleanFlutter) {'on'} else {'off'})"
 if (-not $SkipBuild) {
   Push-Location $proj
   try {
-    $defArg = @()
+    $defArg = @("--dart-define=APP_VERSION=$version", "--dart-define=APP_BUILD=$verBuild")
     if (Test-Path $configPath) {
       foreach ($line in Get-Content $configPath) {
         $t = $line.Trim()

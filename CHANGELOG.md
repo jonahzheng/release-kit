@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.10
+
+- Every `publish` build now auto-injects `--dart-define=APP_VERSION=<x.y.z>` and `--dart-define=APP_BUILD=<build>` from `pubspec.yaml` (all platforms: Windows, Android, macOS, Linux, iOS). Apps can show their real version at runtime via `String.fromEnvironment('APP_VERSION')` / `('APP_BUILD')`; an explicit `build.dartDefine.APP_VERSION`/`APP_BUILD` overrides the auto value.
+
 ## 0.1.9
 
 - `publish <platform>` flag matching is now case/hyphen tolerant: `--CleanFlutter`, `--SKIP_BUILD` etc. are accepted and mapped to their canonical form (`--clean-flutter`, `--skip-build`) on every entry point (Dart CLI, `release-kit.ps1`, `publish_windows.ps1`).

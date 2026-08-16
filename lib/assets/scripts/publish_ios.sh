@@ -63,7 +63,7 @@ if [ "$SKIP_BUILD" = "0" ]; then
   fi
   echo "==> flutter build ipa --release"
   # shellcheck disable=SC2086
-  flutter build ipa --release $OBF_ARGS $EXPORT_ARGS $(dart_defines)
+  flutter build ipa --release $OBF_ARGS $EXPORT_ARGS $(version_defines) $(dart_defines)
 fi
 
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"

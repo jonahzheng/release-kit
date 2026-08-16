@@ -53,7 +53,7 @@ if [ "$SKIP_BUILD" = "0" ]; then
   fi
   echo "==> flutter build linux --release"
   # shellcheck disable=SC2086
-  flutter build linux --release $OBF_ARGS $(dart_defines)
+  flutter build linux --release $OBF_ARGS $(version_defines) $(dart_defines)
 fi
 
 BUNDLE="$PROJECT_ROOT/build/linux/x64/release/bundle"

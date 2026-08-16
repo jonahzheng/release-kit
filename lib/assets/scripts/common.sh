@@ -98,6 +98,7 @@ read_version() {
   fi
   [ -z "$build" ] && build=0
   VERSION_CODE=$((major * 1000000 + minor * 10000 + patch * 100 + build))
+  VERSION_BUILD=$build
 }
 
 # --- sha256 of a file ---
@@ -111,6 +112,14 @@ sha256_file() {
     echo "sha256sum not found" >&2
     return 1
   fi
+}
+
+# --- auto version defines from pubspec (call read_version first) ---
+# Injected into every build so apps can read their real version at runtime:
+#   const appVersion = String.fromEnvironment('APP_VERSION');
+#   const appBuild   = String.fromEnvironment('APP_BUILD');
+version_defines() {
+  printf '%s' "--dart-define=APP_VERSION=$VERSION --dart-define=APP_BUILD=$VERSION_BUILD"
 }
 
 # --- dart-define args from config (build.dartDefine.*) ---

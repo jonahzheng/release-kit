@@ -10,6 +10,8 @@ app.bundleId: com.example.myapp
 app.logo: assets/logo.png
 
 # --- Build-time defines (injected via --dart-define) ---
+# APP_VERSION / APP_BUILD are auto-injected from pubspec (real version at
+# runtime: const v = String.fromEnvironment('APP_VERSION');).
 build.dartDefine.SERVER_URL: https://api.example.com
 
 # --- Output ---

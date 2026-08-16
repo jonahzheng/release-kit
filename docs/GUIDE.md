@@ -102,6 +102,13 @@ Flat `key: value`, dot-namespace, `#` comments. All platform scripts read the sa
 | `app.bundleId` | Android package name / iOS bundle id |
 | `app.logo` | launcher icon source image (optional, icons auto-generated on `publish`) |
 | `build.dartDefine.*` | injected via `--dart-define` |
+
+Every `publish` build also auto-injects `--dart-define=APP_VERSION=<x.y.z>` and `--dart-define=APP_BUILD=<build>` from `pubspec.yaml` (a `build.dartDefine.APP_VERSION` / `.APP_BUILD` entry overrides the auto value). Read them at runtime:
+
+```dart
+const appVersion = String.fromEnvironment('APP_VERSION');
+const appBuild = String.fromEnvironment('APP_BUILD');
+```
 | `output.dir` | artifact output dir (default `dist`) |
 | `hardening.enabled` | Windows hardening rename switch (default false) |
 | `hardening.engineDll` | new engine DLL name |

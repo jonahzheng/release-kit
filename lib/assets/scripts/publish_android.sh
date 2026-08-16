@@ -56,7 +56,7 @@ echo "    project: $PROJECT_ROOT"
 echo "    app: $APP_NAME ($VERSION)  bundle: $BUNDLE_ID"
 echo "    targets: $(if [ "$DO_APK" = 1 ]; then printf 'apk '; fi)$(if [ "$DO_AAB" = 1 ]; then printf 'aab'; fi)  obfuscate: $(if [ "$OBFUSCATE" = 1 ]; then printf 'on'; else printf 'off'; fi)"
 
-DEFINES=$(dart_defines)
+DEFINES="$(version_defines)$(dart_defines)"
 OBF_ARGS=""
 if [ "$OBFUSCATE" = "1" ]; then
   OBF_ARGS="--obfuscate --split-debug-info=./build/obfuscate_symbols"

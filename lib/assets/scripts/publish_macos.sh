@@ -49,7 +49,7 @@ if [ "$SKIP_BUILD" = "0" ]; then
   fi
   echo "==> flutter build macos --release"
   # shellcheck disable=SC2086
-  flutter build macos --release $OBF_ARGS $(dart_defines)
+  flutter build macos --release $OBF_ARGS $(version_defines) $(dart_defines)
 fi
 
 # the .app name comes from the Xcode product name (not app.name), locate robustly

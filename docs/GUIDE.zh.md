@@ -102,6 +102,13 @@ release-kit init
 | `app.bundleId` | Android 包名 / iOS bundle id |
 | `app.logo` | 启动图标源图（可选，`publish` 时自动生成各平台 icon） |
 | `build.dartDefine.*` | `--dart-define` 注入项 |
+
+每次 `publish` 构建还会自动注入 `--dart-define=APP_VERSION=<x.y.z>` 与 `--dart-define=APP_BUILD=<build>`（来源为 `pubspec.yaml` 的 `version:`；若在 `build.dartDefine.APP_VERSION` / `.APP_BUILD` 显式配置则覆盖自动值）。运行时读取：
+
+```dart
+const appVersion = String.fromEnvironment('APP_VERSION');
+const appBuild = String.fromEnvironment('APP_BUILD');
+```
 | `output.dir` | 产物输出目录（默认 `dist`） |
 | `hardening.enabled` | Windows 加固改名开关（默认 false） |
 | `hardening.engineDll` | 引擎 DLL 新名 |
