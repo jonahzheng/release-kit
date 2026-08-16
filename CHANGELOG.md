@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.8
+
+- Fix `release_kit publish windows`: the Dart CLI invoked `publish_windows.ps1` with `-Obfuscate:true` style switches, which PowerShell `-File` cannot bind (error: `Cannot process argument transformation on parameter 'Obfuscate'`). It now passes bare double-dash flags (`--obfuscate`, `--clean-flutter`, ...), which bind correctly.
+
 ## 0.1.7
 
 - All `publish <platform>` flags now use the same double-dash long-flag spelling on every platform (`--obfuscate`, `--skip-build`, `--no-rename`, `--harden`, `--clean-flutter`, `--skip-verify`, `--output-dir`). The old Windows single-dash spellings (`-Obfuscate` etc.) are no longer accepted.

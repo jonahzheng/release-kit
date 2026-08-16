@@ -228,14 +228,17 @@ Future<int> _publishWindows(
     'Bypass',
     '-File',
     ps,
-    '-Obfuscate:${obf ? 'true' : 'false'}',
-    '-SkipBuild:${skp ? 'true' : 'false'}',
-    '-NoRename:${nor ? 'true' : 'false'}',
-    '-Harden:${hrd ? 'true' : 'false'}',
-    '-CleanFlutter:${cln ? 'true' : 'false'}',
-    '-SkipVerify:${srv ? 'true' : 'false'}',
+    // Pass switch flags as bare double-dash flags, only when true:
+    // `powershell -File script.ps1 -Switch:true` fails to bind a switch value,
+    // but a bare `--obfuscate` binds fine (via the script's $Extra catch-all).
+    if (obf) '--obfuscate',
+    if (skp) '--skip-build',
+    if (nor) '--no-rename',
+    if (hrd) '--harden',
+    if (cln) '--clean-flutter',
+    if (srv) '--skip-verify',
   ];
-  if (outDir.isNotEmpty) args.addAll(['-OutputDir', outDir]);
+  if (outDir.isNotEmpty) args.addAll(['--output-dir', outDir]);
   return runStreamed('powershell', args, workingDirectory: root);
 }
 
