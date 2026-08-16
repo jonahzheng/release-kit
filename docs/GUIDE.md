@@ -36,7 +36,7 @@ Both commands target the current directory. Add `-p <project-root>` (anywhere in
 # operate on another project from anywhere
 release-kit init -p /path/to/myapp
 release-kit publish android -p /path/to/myapp
-release-kit publish windows -Obfuscate -p /path/to/myapp
+release-kit publish windows --obfuscate -p /path/to/myapp
 ```
 
 ### Common flags (all platforms)
@@ -135,26 +135,26 @@ Skipped when `app.logo` is unset; errors out when the source image is missing. O
 ### Windows
 
 ```bash
-release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify] [-OutputDir <path>]
+release-kit publish windows [--obfuscate] [--skip-build] [--no-rename] [--harden] [--clean-flutter] [--skip-verify] [--output-dir <path>]
 ```
 
 | Flag | Description |
 |---|---|
-| `-Obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
-| `-SkipBuild` | Reuse existing `build\windows\x64\runner\Release` outputs, just collect/package artifacts |
-| `-NoRename` | Force hardening rename off even if `hardening.enabled: true` is set in config |
-| `-Harden` | Force hardening rename on regardless of config (`flutter_windows.dll → core_engine.dll`, auto-patch EXE/plugin DLL import tables) |
-| `-CleanFlutter` | Implies hardening; additionally scrub Flutter traces from the bundle (see below). Mutually exclusive with `-NoRename` (`-NoRename` wins) |
-| `-SkipVerify` | Skip the pre-zip "exe launches" smoke test (on by default; warns early if the build is broken) |
-| `-OutputDir <path>` | Override the artifact staging/zip output directory |
+| `--obfuscate` | Dart obfuscated build (symbols in `build/obfuscate_symbols`) |
+| `--skip-build` | Reuse existing `build\windows\x64\runner\Release` outputs, just collect/package artifacts |
+| `--no-rename` | Force hardening rename off even if `hardening.enabled: true` is set in config |
+| `--harden` | Force hardening rename on regardless of config (`flutter_windows.dll → core_engine.dll`, auto-patch EXE/plugin DLL import tables) |
+| `--clean-flutter` | Implies hardening; additionally scrub Flutter traces from the bundle (see below). Mutually exclusive with `--no-rename` (`--no-rename` wins) |
+| `--skip-verify` | Skip the pre-zip "exe launches" smoke test (on by default; warns early if the build is broken) |
+| `--output-dir <path>` | Override the artifact staging/zip output directory |
 
 - Artifacts: `dist/<app>-<version>-win64.zip` + sha256
-- Hardening rename (with `-Harden` or `hardening.enabled=true`): `flutter_windows.dll → core_engine.dll`, auto-patching EXE/plugin DLL import tables
+- Hardening rename (with `--harden` or `hardening.enabled=true`): `flutter_windows.dll → core_engine.dll`, auto-patching EXE/plugin DLL import tables
 
-### Scrub Flutter traces (`-CleanFlutter`)
+### Scrub Flutter traces (`--clean-flutter`)
 
 ```bash
-release-kit publish windows -Obfuscate -CleanFlutter
+release-kit publish windows --obfuscate --clean-flutter
 ```
 
 Pure **artifact-level** processing, **no project source changes** (`main.cpp` / CMake / `git status` unaffected, `flutter run` keeps working):
@@ -166,7 +166,7 @@ Pure **artifact-level** processing, **no project source changes** (`main.cpp` / 
 
 The bundle no longer contains any `flutter` filenames, and **the packaged exe is verified runnable**.
 
-> `-CleanFlutter` implies hardening rename; mutually exclusive with `-NoRename` (`-NoRename` wins).
+> `--clean-flutter` implies hardening rename; mutually exclusive with `--no-rename` (`--no-rename` wins).
 
 ### Android
 
@@ -185,12 +185,12 @@ Default builds both APK + AAB.
 - Artifacts: `dist/<app>-<version>-android.apk / .aab` + sha256
 - Signing must be configured with a keystore under your project's `android/` (passwords via env vars)
 
-> On the Windows entry (`release-kit.ps1`), `-Obfuscate` auto-maps to `--obfuscate`, so the two platforms share one spelling:
+> Every platform uses the same double-dash long-flag spelling, so `--obfuscate` works identically on Windows, Android, macOS, Linux and iOS:
 > ```powershell
-> release-kit publish windows -Obfuscate      # Windows obfuscation
-> release-kit publish android -Obfuscate      # Android obfuscation (same as --obfuscate)
+> release-kit publish windows --obfuscate      # Windows obfuscation
+> release-kit publish android --obfuscate      # Android obfuscation
 > ```
-> Other non-Windows platforms (macOS/Linux/iOS) run via Git Bash on Windows.
+> Non-Windows platforms (macOS/Linux/iOS) run via Git Bash on Windows.
 
 ### iOS
 

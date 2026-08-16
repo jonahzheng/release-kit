@@ -5,6 +5,8 @@
 #
 # All commands run against the current directory. Pass -p <project-root>
 # (anywhere in the args) to target another project from any directory.
+# Platform flags use the same double-dash spelling on every platform
+# (e.g. windows --obfuscate, --clean-flutter; android --apk, --obfuscate).
 
 param(
   [Parameter(Position = 0)][string]$Command = "",
@@ -86,26 +88,28 @@ try {
       if (-not $skipIcons) { & (Join-Path $kitRoot "lib\assets\scripts\generate_icons.ps1") -Platform $platform }
       switch ($platform) {
         "windows" {
-          # publish_windows.ps1 takes switch params; pass them explicitly so a
-          # string-array splat can't mis-bind "-Obfuscate" onto $OutputDir
+          # publish_windows.ps1 takes switch params; parse them here and pass
+          # them explicitly so a string-array splat can't mis-bind a flag onto
+          # $OutputDir. Flags use the double-dash spelling (--obfuscate etc.),
+          # same as every other platform.
           $obf = $false; $skp = $false; $nor = $false; $hrd = $false; $cln = $false; $srv = $false; $outDir = ""
           for ($i = 0; $i -lt $rest.Count; $i++) {
-            switch ($rest[$i]) {
-              "-Obfuscate"   { $obf = $true }
-              "-SkipBuild"   { $skp = $true }
-              "-NoRename"    { $nor = $true }
-              "-Harden"      { $hrd = $true }
-              "-CleanFlutter"{ $cln = $true }
-              "-SkipVerify"  { $srv = $true }
-              "-OutputDir"   { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
+            switch ($rest[$i].ToLower()) {
+              "--obfuscate"     { $obf = $true }
+              "--skip-build"    { $skp = $true }
+              "--no-rename"     { $nor = $true }
+              "--harden"        { $hrd = $true }
+              "--clean-flutter" { $cln = $true }
+              "--skip-verify"   { $srv = $true }
+              "--output-dir"    { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
             }
           }
           & (Join-Path $kitRoot "lib\assets\scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -SkipVerify:$srv -OutputDir $outDir
         }
         "android" {
-          # map the common -Obfuscate spelling to the android --obfuscate flag
+          # the android script takes the same --obfuscate double-dash flag
           $androidArgs = @()
-          foreach ($a in $rest) { if ($a -eq "-Obfuscate") { $androidArgs += "--obfuscate" } else { $androidArgs += $a } }
+          foreach ($a in $rest) { if ($a -eq "--obfuscate") { $androidArgs += "--obfuscate" } else { $androidArgs += $a } }
           Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_android.sh") -ArgList $androidArgs
         }
         "macos"   { Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_macos.sh") -ArgList $rest }

@@ -66,7 +66,7 @@ Windows？用 `release-kit.ps1` 代替 `release-kit.sh`：
 
 ```powershell
 .\tools\release-kit\release-kit.ps1 init
-.\tools\release-kit\release-kit.ps1 publish windows -Obfuscate
+.\tools\release-kit\release-kit.ps1 publish windows --obfuscate
 ```
 
 ---
@@ -89,13 +89,13 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 | 平台 | 参数 |
 |---|---|
-| windows | `-Obfuscate` `-SkipBuild` `-NoRename` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
+| windows | `--obfuscate` `--skip-build` `--no-rename` `--harden` `--clean-flutter` `--skip-verify` `--output-dir` |
 | android | `--apk` / `--aab` `--skip-build` `--obfuscate` |
 | linux | `--skip-build` `--obfuscate` `--deb` `--rpm` `--appimage` |
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |
 | macos | `--skip-build` `--obfuscate` |
 
-> Windows 入口下，`-Obfuscate` 对 android 同样生效（自动映射为 `--obfuscate`）。所有平台均可加 `--no-icons` 与 `-p <项目根>`。
+> 所有平台统一使用 `--` 双横线长参数。所有平台均可加 `--no-icons` 与 `-p <项目根>`。
 
 > 每个平台各参数的详细说明：[docs/GUIDE.zh.md](docs/GUIDE.zh.md) → 「三、打包」。
 

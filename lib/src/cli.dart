@@ -197,25 +197,25 @@ Future<int> _publishWindows(
   var outDir = '';
   for (var i = 0; i < flags.length; i++) {
     switch (flags[i]) {
-      case '-Obfuscate':
+      case '--obfuscate':
         obf = true;
         break;
-      case '-SkipBuild':
+      case '--skip-build':
         skp = true;
         break;
-      case '-NoRename':
+      case '--no-rename':
         nor = true;
         break;
-      case '-Harden':
+      case '--harden':
         hrd = true;
         break;
-      case '-CleanFlutter':
+      case '--clean-flutter':
         cln = true;
         break;
-      case '-SkipVerify':
+      case '--skip-verify':
         srv = true;
         break;
-      case '-OutputDir':
+      case '--output-dir':
         if (i + 1 < flags.length) {
           outDir = flags[i + 1];
           i++;

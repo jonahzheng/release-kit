@@ -1,18 +1,20 @@
 # release-kit: publish Windows build (config-driven)
 # Usage:
-#   powershell -ExecutionPolicy Bypass -File publish_windows.ps1 [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify] [-OutputDir <path>]
+#   powershell -ExecutionPolicy Bypass -File publish_windows.ps1 [--obfuscate] [--skip-build] [--no-rename] [--harden] [--clean-flutter] [--skip-verify] [--output-dir <path>]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 #
-# Hardening (rename engine dll + assets, patch import tables) is enabled by
-# default only when config has hardening.enabled: true. Pass -Harden to force
-# it on regardless of config; pass -NoRename to force it off.
+# Flags use the same double-dash spelling as every other platform.
 #
-# -CleanFlutter additionally scrubs Flutter traces from the bundle:
+# Hardening (rename engine dll + assets, patch import tables) is enabled by
+# default only when config has hardening.enabled: true. Pass --harden to force
+# it on regardless of config; pass --no-rename to force it off.
+#
+# --clean-flutter additionally scrubs Flutter traces from the bundle:
 #   1. renames the asset dir and patches the exe's embedded UTF-16 path so
 #      the engine loads data\resources (no source changes, reverted nothing)
 #   2. renames leftover flutter_* plugin dlls (e.g. flutter_tts_plugin.dll)
 #
-# -SkipVerify skips the post-build "exe launches" smoke test.
+# --skip-verify skips the post-build "exe launches" smoke test.
 
 param(
   [switch]$Obfuscate,
@@ -21,8 +23,23 @@ param(
   [switch]$Harden,
   [switch]$CleanFlutter,
   [switch]$SkipVerify,
-  [string]$OutputDir = ""
+  [string]$OutputDir = "",
+  [Parameter(ValueFromRemainingArguments = $true)][string[]]$Extra
 )
+
+# accept the canonical double-dash spellings (pushed here as remaining args by
+# release-kit.sh / direct invocations) and OR them onto the switches
+for ($i = 0; $i -lt $Extra.Count; $i++) {
+  switch ($Extra[$i].ToLower()) {
+    "--obfuscate"     { $Obfuscate = $true }
+    "--skip-build"    { $SkipBuild = $true }
+    "--no-rename"     { $NoRename = $true }
+    "--harden"        { $Harden = $true }
+    "--clean-flutter" { $CleanFlutter = $true }
+    "--skip-verify"   { $SkipVerify = $true }
+    "--output-dir"    { if ($i + 1 -lt $Extra.Count) { $OutputDir = $Extra[$i + 1]; $i++ } }
+  }
+}
 
 $ErrorActionPreference = "Stop"
 $kitRoot = Split-Path -Parent $PSScriptRoot   # release-kit/
@@ -69,8 +86,8 @@ if (-not $dllNew) { $dllNew = "core_engine.dll" }
 if (-not $assetNew) { $assetNew = "resources" }
 if (-not $cfgOutDir) { $cfgOutDir = "dist" }
 
-# hardening: config default, -Harden forces on, -NoRename forces off
-# -CleanFlutter implies hardening (it renames the engine + assets too)
+# hardening: config default, --harden forces on, --no-rename forces off
+# --clean-flutter implies hardening (it renames the engine + assets too)
 $hardEnabled = (($hardCfg -or $Harden -or $CleanFlutter) -and (-not $NoRename))
 
 if (-not $appName) { $appName = Split-Path -Leaf $proj }
@@ -184,7 +201,7 @@ if ($hardEnabled -and -not $NoRename) {
   if (Test-Path $dllOld) { Rename-Item $dllOld $dllNew }
   Write-Host "==> hardening applied: $oldStr -> $newStr"
 
-  # -CleanFlutter: scrub Flutter traces from the bundle (no source changes).
+  # --clean-flutter: scrub Flutter traces from the bundle (no source changes).
   #   1. rename data\flutter_assets -> data\resources
   #   2. patch the UTF-16 "flutter_assets" string embedded in the exe (same
   #      byte length, NUL-padded) so the engine loads data\resources
@@ -237,7 +254,7 @@ if ($hardEnabled -and -not $NoRename) {
 
 # --- smoke test: the collected exe should launch and stay alive ---
 # Catches broken builds (e.g. engine DLL wrong variant, missing kernel blob)
-# before they get packaged. Skippable with -SkipVerify.
+# before they get packaged. Skippable with --skip-verify.
 if (-not $SkipVerify) {
   $verifyExe = Join-Path $OutputDir "$binary.exe"
   if (Test-Path $verifyExe) {

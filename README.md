@@ -66,7 +66,7 @@ Windows? Use `release-kit.ps1` instead of `release-kit.sh`:
 
 ```powershell
 .\tools\release-kit\release-kit.ps1 init
-.\tools\release-kit\release-kit.ps1 publish windows -Obfuscate
+.\tools\release-kit\release-kit.ps1 publish windows --obfuscate
 ```
 
 ---
@@ -89,13 +89,13 @@ release-kit publish android --obfuscate -p /path/to/myapp
 
 | Platform | Flags |
 |---|---|
-| windows | `-Obfuscate` `-SkipBuild` `-NoRename` `-Harden` `-CleanFlutter` `-SkipVerify` `-OutputDir` |
+| windows | `--obfuscate` `--skip-build` `--no-rename` `--harden` `--clean-flutter` `--skip-verify` `--output-dir` |
 | android | `--apk` / `--aab` `--skip-build` `--obfuscate` |
 | linux | `--skip-build` `--obfuscate` `--deb` `--rpm` `--appimage` |
 | ios | `--skip-build` `--obfuscate` `--export-method` `--no-codesign` |
 | macos | `--skip-build` `--obfuscate` |
 
-> On Windows, `-Obfuscate` also works for android (auto-mapped to `--obfuscate`). All platforms accept `--no-icons` and `-p <project-root>`.
+> All platforms share the same double-dash long-flag spelling. All platforms accept `--no-icons` and `-p <project-root>`.
 
 > Detailed per-flag descriptions for every platform: **[docs/GUIDE.md](docs/GUIDE.md) → Packaging**.
 

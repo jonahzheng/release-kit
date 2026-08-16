@@ -36,7 +36,7 @@ release-kit publish <platform> [args]  # 打包（可加 -p <项目根> 从任�
 # 在任意目录直接操作另一个项目
 release-kit init -p /path/to/myapp
 release-kit publish android -p /path/to/myapp
-release-kit publish windows -Obfuscate -p /path/to/myapp
+release-kit publish windows --obfuscate -p /path/to/myapp
 ```
 
 ### 通用参数（所有平台）
@@ -135,26 +135,26 @@ app.logo: assets/logo.png
 ### Windows
 
 ```bash
-release-kit publish windows [-Obfuscate] [-SkipBuild] [-NoRename] [-Harden] [-CleanFlutter] [-SkipVerify] [-OutputDir <路径>]
+release-kit publish windows [--obfuscate] [--skip-build] [--no-rename] [--harden] [--clean-flutter] [--skip-verify] [--output-dir <路径>]
 ```
 
 | 参数 | 说明 |
 |---|---|
-| `-Obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
-| `-SkipBuild` | 复用现有 `build\windows\x64\runner\Release` 产物，只收集/打包 |
-| `-NoRename` | 即使配置了 `hardening.enabled: true` 也强制关闭加固改名 |
-| `-Harden` | 无视配置强制开启加固改名（`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表） |
-| `-CleanFlutter` | 隐含加固；额外清理产物中的 Flutter 痕迹（见下）。与 `-NoRename` 互斥（后者优先） |
-| `-SkipVerify` | 跳过打包前的 exe 启动冒烟测试（默认开启，构建损坏时提前告警） |
-| `-OutputDir <路径>` | 覆盖产物暂存/zip 输出目录 |
+| `--obfuscate` | Dart 混淆构建（符号存 `build/obfuscate_symbols`） |
+| `--skip-build` | 复用现有 `build\windows\x64\runner\Release` 产物，只收集/打包 |
+| `--no-rename` | 即使配置了 `hardening.enabled: true` 也强制关闭加固改名 |
+| `--harden` | 无视配置强制开启加固改名（`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表） |
+| `--clean-flutter` | 隐含加固；额外清理产物中的 Flutter 痕迹（见下）。与 `--no-rename` 互斥（后者优先） |
+| `--skip-verify` | 跳过打包前的 exe 启动冒烟测试（默认开启，构建损坏时提前告警） |
+| `--output-dir <路径>` | 覆盖产物暂存/zip 输出目录 |
 
 - 产物：`dist/<app>-<version>-win64.zip` + sha256
-- 加固改名（`-Harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
+- 加固改名（`--harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
 
-### 清理 Flutter 痕迹（`-CleanFlutter`）
+### 清理 Flutter 痕迹（`--clean-flutter`）
 
 ```bash
-release-kit publish windows -Obfuscate -CleanFlutter
+release-kit publish windows --obfuscate --clean-flutter
 ```
 
 纯**产物层**处理，**不改动项目源码**（`main.cpp` / CMake / `git status` 均不受影响，`flutter run` 正常）：
@@ -166,7 +166,7 @@ release-kit publish windows -Obfuscate -CleanFlutter
 
 产物中不再出现 `flutter` 文件名，且**打包后的 exe 已验证可正常运行**。
 
-> `-CleanFlutter` 隐含启用加固改名；与 `-NoRename` 互斥（后者优先）。
+> `--clean-flutter` 隐含启用加固改名；与 `--no-rename` 互斥（后者优先）。
 
 ### Android
 
@@ -185,10 +185,10 @@ release-kit publish android [--apk] [--aab] [--skip-build] [--obfuscate]
 - 产物：`dist/<app>-<version>-android.apk / .aab` + sha256
 - 签名需在项目 `android/` 配置好 keystore（密码走环境变量）
 
-> Windows 入口（`release-kit.ps1`）下，`-Obfuscate` 会自动映射为 `--obfuscate`，两平台命令写法统一：
+> 所有平台使用相同的 `--` 双横线长参数，`--obfuscate` 在 Windows、Android、macOS、Linux、iOS 写法完全一致：
 > ```powershell
-> release-kit publish windows -Obfuscate      # Windows 混淆
-> release-kit publish android -Obfuscate      # Android 混淆（等价 --obfuscate）
+> release-kit publish windows --obfuscate      # Windows 混淆
+> release-kit publish android --obfuscate      # Android 混淆
 > ```
 > 其余非 Windows 平台（macOS/Linux/iOS）在 Windows 上通过 Git Bash 执行 `.sh` 脚本。
 
