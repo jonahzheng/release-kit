@@ -94,14 +94,16 @@ try {
           # same as every other platform.
           $obf = $false; $skp = $false; $nor = $false; $hrd = $false; $cln = $false; $srv = $false; $outDir = ""
           for ($i = 0; $i -lt $rest.Count; $i++) {
-            switch ($rest[$i].ToLower()) {
-              "--obfuscate"     { $obf = $true }
-              "--skip-build"    { $skp = $true }
-              "--no-rename"     { $nor = $true }
-              "--harden"        { $hrd = $true }
-              "--clean-flutter" { $cln = $true }
-              "--skip-verify"   { $srv = $true }
-              "--output-dir"    { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
+            $flag = $rest[$i]
+            if ($flag.StartsWith("--")) { $flag = $flag.ToLower() -replace "-", "" }
+            switch ($flag) {
+              "obfuscate"    { $obf = $true }
+              "skipbuild"    { $skp = $true }
+              "norename"     { $nor = $true }
+              "harden"       { $hrd = $true }
+              "cleanflutter" { $cln = $true }
+              "skipverify"   { $srv = $true }
+              "outputdir"    { if ($i + 1 -lt $rest.Count) { $outDir = $rest[$i + 1]; $i++ } }
             }
           }
           & (Join-Path $kitRoot "lib\assets\scripts\publish_windows.ps1") -Obfuscate:$obf -SkipBuild:$skp -NoRename:$nor -Harden:$hrd -CleanFlutter:$cln -SkipVerify:$srv -OutputDir $outDir
@@ -109,7 +111,9 @@ try {
         "android" {
           # the android script takes the same --obfuscate double-dash flag
           $androidArgs = @()
-          foreach ($a in $rest) { if ($a -eq "--obfuscate") { $androidArgs += "--obfuscate" } else { $androidArgs += $a } }
+          foreach ($a in $rest) {
+            if ($a.StartsWith("--") -and (($a.ToLower() -replace "-", "") -eq "obfuscate")) { $androidArgs += "--obfuscate" } else { $androidArgs += $a }
+          }
           Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_android.sh") -ArgList $androidArgs
         }
         "macos"   { Invoke-Sh -Script (Join-Path $kitRoot "lib\assets\scripts\publish_macos.sh") -ArgList $rest }

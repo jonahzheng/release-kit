@@ -2,7 +2,7 @@ name: release_kit
 description: >-
   Flutter release toolkit - automatic version bump + multi-platform packaging
   with a unified config.
-version: 0.1.8
+version: 0.1.9
 
 homepage: https://github.com/jonahzheng/release-kit
 repository: https://github.com/jonahzheng/release-kit

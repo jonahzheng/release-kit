@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.9
+
+- `publish <platform>` flag matching is now case/hyphen tolerant: `--CleanFlutter`, `--SKIP_BUILD` etc. are accepted and mapped to their canonical form (`--clean-flutter`, `--skip-build`) on every entry point (Dart CLI, `release-kit.ps1`, `publish_windows.ps1`).
+
 ## 0.1.8
 
 - Fix `release_kit publish windows`: the Dart CLI invoked `publish_windows.ps1` with `-Obfuscate:true` style switches, which PowerShell `-File` cannot bind (error: `Cannot process argument transformation on parameter 'Obfuscate'`). It now passes bare double-dash flags (`--obfuscate`, `--clean-flutter`, ...), which bind correctly.

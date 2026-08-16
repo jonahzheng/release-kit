@@ -28,16 +28,20 @@ param(
 )
 
 # accept the canonical double-dash spellings (pushed here as remaining args by
-# release-kit.sh / direct invocations) and OR them onto the switches
+# release-kit.sh / direct invocations) and OR them onto the switches. Matching
+# is case/hyphen tolerant: --CleanFlutter, --clean-flutter and --cleanflutter
+# all enable it.
 for ($i = 0; $i -lt $Extra.Count; $i++) {
-  switch ($Extra[$i].ToLower()) {
-    "--obfuscate"     { $Obfuscate = $true }
-    "--skip-build"    { $SkipBuild = $true }
-    "--no-rename"     { $NoRename = $true }
-    "--harden"        { $Harden = $true }
-    "--clean-flutter" { $CleanFlutter = $true }
-    "--skip-verify"   { $SkipVerify = $true }
-    "--output-dir"    { if ($i + 1 -lt $Extra.Count) { $OutputDir = $Extra[$i + 1]; $i++ } }
+  $flag = $Extra[$i]
+  if ($flag.StartsWith("--")) { $flag = $flag.ToLower() -replace "-", "" }
+  switch ($flag) {
+    "obfuscate"    { $Obfuscate = $true }
+    "skipbuild"    { $SkipBuild = $true }
+    "norename"     { $NoRename = $true }
+    "harden"       { $Harden = $true }
+    "cleanflutter" { $CleanFlutter = $true }
+    "skipverify"   { $SkipVerify = $true }
+    "outputdir"    { if ($i + 1 -lt $Extra.Count) { $OutputDir = $Extra[$i + 1]; $i++ } }
   }
 }
 

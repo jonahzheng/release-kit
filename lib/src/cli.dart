@@ -60,6 +60,32 @@ bool _hasPubspec(String root) =>
     File('$root${Platform.pathSeparator}app${Platform.pathSeparator}pubspec.yaml')
         .existsSync();
 
+// Canonical publish flags, keyed by their hyphen-less lowercase spelling.
+// Accepts any case/hyphenation of a known double-dash flag
+// (e.g. --CleanFlutter, --SKIP_BUILD) and maps it to the canonical form.
+const _canonicalFlags = <String, String>{
+  'apk': '--apk',
+  'aab': '--aab',
+  'obfuscate': '--obfuscate',
+  'skipbuild': '--skip-build',
+  'norename': '--no-rename',
+  'harden': '--harden',
+  'cleanflutter': '--clean-flutter',
+  'skipverify': '--skip-verify',
+  'outputdir': '--output-dir',
+  'exportmethod': '--export-method',
+  'nocodesign': '--no-codesign',
+  'deb': '--deb',
+  'rpm': '--rpm',
+  'appimage': '--appimage',
+};
+
+String _normalizeFlag(String f) {
+  if (!f.startsWith('--')) return f;
+  return _canonicalFlags[f.substring(2).replaceAll('-', '').toLowerCase()] ??
+      f;
+}
+
 bool _failProjectRoot(String root) {
   stderr.writeln('release-kit: no pubspec.yaml found under $root');
   stderr.writeln(
@@ -149,7 +175,7 @@ Future<int> _cmdPublish(List<String> args) async {
     if (f == '--no-icons') {
       skipIcons = true;
     } else {
-      filtered.add(f);
+      filtered.add(_normalizeFlag(f));
     }
   }
 
