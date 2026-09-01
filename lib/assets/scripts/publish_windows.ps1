@@ -293,7 +293,7 @@ if (-not $SkipVerify) {
 }
 
 # --- zip ---
-$zipFile = Join-Path (Split-Path $OutputDir) "$appName-$version-win64.zip"
+$zipFile = Join-Path (Split-Path $OutputDir) "$appName-$version+$verBuild-win64.zip"
 if (Test-Path $zipFile) { Remove-Item $zipFile -Force }
 Compress-Archive -Path $OutputDir -DestinationPath $zipFile
 $hash = (Get-FileHash $zipFile -Algorithm SHA256).Hash.ToLower()

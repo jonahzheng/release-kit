@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.12
+
+- Windows installer zip now includes the build number: `dist/<app>-<version>+<build>-win64.zip` (e.g. `ZShell-1.41.2+79-win64.zip`).
+
 ## 0.1.11
 
 - macOS `publish` now also emits an auto-update `.zip` next to the `.dmg`, built from the very same signed `.app` (`ditto -c -k --sequesterRsrc --keepParent` keeps `<AppName>.app` as the sole top-level entry so in-app updaters that strip one directory can replace the running app's `Contents`). Output: `dist/<app>-<version>-macos.dmg` + `dist/<app>-<version>-macos.zip`.
