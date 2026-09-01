@@ -155,7 +155,7 @@ release-kit publish windows [--obfuscate] [--skip-build] [--no-rename] [--harden
 | `--skip-verify` | 跳过打包前的 exe 启动冒烟测试（默认开启，构建损坏时提前告警） |
 | `--output-dir <路径>` | 覆盖产物暂存/zip 输出目录 |
 
-- 产物：`dist/<app>-<version>-win64.zip` + sha256
+- 产物：`dist/<app>-<version>+<build>-win64.zip` + sha256
 - 加固改名（`--harden` 或 `hardening.enabled=true` 时）：`flutter_windows.dll → core_engine.dll`，自动补丁 EXE/插件 DLL 导入表
 
 ### 清理 Flutter 痕迹（`--clean-flutter`）
@@ -228,7 +228,7 @@ release-kit publish macos [--skip-build] [--obfuscate]
 
 - 需 **macOS + Xcode**；通过 `hdiutil`（UDZO）生成拖拽安装的 `.dmg`
 - 注意：正式分发需要 Developer ID 签名配置，否则 `.app` 仅本机可运行（`flutter build macos` 无 `--no-codesign`）
-- 产物：`dist/<app>-<version>-macos.dmg` + sha256
+- 产物：`dist/<app>-<version>+<build>-macos.dmg` + `dist/<app>-<version>+<build>-macos.zip` + sha256
 
 ### Linux
 
@@ -245,10 +245,10 @@ release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appima
 | `--appimage` | 通过 `linuxdeploy` 打 AppImage（需安装；见 https://github.com/linuxdeploy/linuxdeploy） |
 
 - 需 Linux 主机，Flutter Linux 桌面支持（GTK 工具链）
-- 默认始终产出便携 `dist/<app>-<version>-linux-x64.tar.gz`（release bundle）
+- 默认始终产出便携 `dist/<app>-<version>+<build>-linux-x64.tar.gz`（release bundle）
 - 桌面项分类来自 `linux.desktopCategories`（默认 `Utility;`）
 - 包内图标来源：`linux/runner/my_icon.png`（由 `app.logo` 自动生成）
-- 产物：`dist/<app>-<version>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
+- 产物：`dist/<app>-<version>+<build>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
 
 ## 四、常见问题
 

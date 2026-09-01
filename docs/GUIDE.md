@@ -155,7 +155,7 @@ release-kit publish windows [--obfuscate] [--skip-build] [--no-rename] [--harden
 | `--skip-verify` | Skip the pre-zip "exe launches" smoke test (on by default; warns early if the build is broken) |
 | `--output-dir <path>` | Override the artifact staging/zip output directory |
 
-- Artifacts: `dist/<app>-<version>-win64.zip` + sha256
+- Artifacts: `dist/<app>-<version>+<build>-win64.zip` + sha256
 - Hardening rename (with `--harden` or `hardening.enabled=true`): `flutter_windows.dll → core_engine.dll`, auto-patching EXE/plugin DLL import tables
 
 ### Scrub Flutter traces (`--clean-flutter`)
@@ -228,7 +228,7 @@ release-kit publish macos [--skip-build] [--obfuscate]
 
 - Requires **macOS + Xcode**; produces a drag-to-install `.dmg` via `hdiutil` (UDZO)
 - Note: distribution needs a Developer ID signing config; without it the `.app` runs locally only (`flutter build macos` has no `--no-codesign`)
-- Artifacts: `dist/<app>-<version>-macos.dmg` + sha256
+- Artifacts: `dist/<app>-<version>+<build>-macos.dmg` + `dist/<app>-<version>+<build>-macos.zip` + sha256
 
 ### Linux
 
@@ -245,10 +245,10 @@ release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appima
 | `--appimage` | Build an AppImage via `linuxdeploy` (must be installed; see https://github.com/linuxdeploy/linuxdeploy) |
 
 - Requires a Linux host with Flutter Linux desktop support (GTK toolchain)
-- Default output: portable `dist/<app>-<version>-linux-x64.tar.gz` (release bundle) — always produced
+- Default output: portable `dist/<app>-<version>+<build>-linux-x64.tar.gz` (release bundle) — always produced
 - Desktop-entry categories come from `linux.desktopCategories` (default `Utility;`)
 - Icon source for the packages: `linux/runner/my_icon.png` (auto-generated from `app.logo`)
-- Artifacts: `dist/<app>-<version>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
+- Artifacts: `dist/<app>-<version>+<build>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
 
 ## 4. FAQ
 

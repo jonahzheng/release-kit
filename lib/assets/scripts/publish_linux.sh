@@ -42,7 +42,7 @@ read_version "$PROJECT_ROOT/pubspec.yaml"
 [ -z "$APP_NAME" ] && APP_NAME=$(basename "$PROJECT_ROOT")
 
 echo "==> release-kit publish_linux"
-echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION)"
+echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION_FULL)"
 echo "    obfuscate: $(if [ "$OBFUSCATE" = 1 ]; then printf 'on'; else printf 'off'; fi)"
 echo "    packages: $(if [ "$DO_DEB" = 1 ]; then printf 'deb '; fi)$(if [ "$DO_RPM" = 1 ]; then printf 'rpm '; fi)$(if [ "$DO_APPIMAGE" = 1 ]; then printf 'appimage'; fi)"
 
@@ -78,7 +78,7 @@ fi
 PKG_ID=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
 
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"
-TGZ="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-linux-x64.tar.gz"
+TGZ="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x64.tar.gz"
 
 tar -czf "$TGZ" -C "$(dirname "$BUNDLE")" "$(basename "$BUNDLE")"
 print_artifact "$TGZ"
@@ -127,7 +127,7 @@ if [ "$DO_DEB" = "1" ]; then
     echo " Release build of $APP_NAME (flutter linux)."
   } > "$STAGE/DEBIAN/control"
 
-  DEB_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-linux-x64.deb"
+  DEB_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x64.deb"
   dpkg-deb --build "$STAGE" "$DEB_OUT"
   rm -rf "$STAGE"
   trap - EXIT
@@ -191,7 +191,7 @@ if [ "$DO_RPM" = "1" ]; then
     echo "rpmbuild produced no rpm" >&2
     exit 1
   fi
-  RPM_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-linux-x64.rpm"
+  RPM_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x64.rpm"
   cp "$RPM_FILE" "$RPM_OUT"
   rm -rf "$STAGE"
   trap - EXIT
@@ -206,7 +206,7 @@ if [ "$DO_APPIMAGE" = "1" ]; then
   fi
   echo "==> building AppImage ..."
   linuxdeploy --appdir "$BUNDLE" -o appimage
-  APPRUN="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-linux-x86_64.AppImage"
+  APPRUN="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x86_64.AppImage"
   # linuxdeploy writes the AppImage next to the bundle; move it if present
   for f in "$(dirname "$BUNDLE")"/"$APP_NAME"*.AppImage; do
     if [ -f "$f" ]; then

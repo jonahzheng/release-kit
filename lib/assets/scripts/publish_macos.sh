@@ -39,7 +39,7 @@ read_version "$PROJECT_ROOT/pubspec.yaml"
 [ -z "$APP_NAME" ] && APP_NAME=$(basename "$PROJECT_ROOT")
 
 echo "==> release-kit publish_macos"
-echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION)"
+echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION_FULL)"
 echo "    obfuscate: $(if [ "$OBFUSCATE" = 1 ]; then printf 'on'; else printf 'off'; fi)"
 
 if [ "$SKIP_BUILD" = "0" ]; then
@@ -60,7 +60,7 @@ if [ -z "$APP_BUNDLE" ] || [ ! -d "$APP_BUNDLE" ]; then
 fi
 
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"
-DMG_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-macos.dmg"
+DMG_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-macos.dmg"
 
 # --- package .app into a drag-to-install .dmg ---
 STAGE=$(mktemp -d)
@@ -85,7 +85,7 @@ print_artifact "$DMG_OUT"
 # running app's Contents (ZShell's update_controller + updater.sh). Keeping
 # --keepParent makes the .app the sole top-level dir so the client strips
 # exactly one level to reveal Contents/.
-ZIP_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-macos.zip"
+ZIP_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-macos.zip"
 rm -f "$ZIP_OUT"
 ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" "$ZIP_OUT"
 print_artifact "$ZIP_OUT"

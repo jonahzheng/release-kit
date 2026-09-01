@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.13
+
+- macOS and Linux package filenames now include the build number, matching the Windows convention: `dist/<app>-<version>+<build>-macos.dmg` / `.zip`, `dist/<app>-<version>+<build>-linux-x64.tar.gz` / `.deb` / `.rpm` (e.g. `ZShell-1.41.2+79-macos.zip`). `read_version` now also exports `VERSION_FULL` (`x.y.z+build`).
+
 ## 0.1.12
 
 - Windows installer zip now includes the build number: `dist/<app>-<version>+<build>-win64.zip` (e.g. `ZShell-1.41.2+79-win64.zip`).

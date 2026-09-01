@@ -79,7 +79,8 @@ resolve_project() {
 }
 
 # --- read version from pubspec.yaml ---
-# usage: read_version <pubspec> -> sets VERSION (x.y.z) and VERSION_CODE (int)
+# usage: read_version <pubspec> -> sets VERSION (x.y.z), VERSION_BUILD (int),
+# VERSION_FULL (x.y.z+build) and VERSION_CODE (int).
 # Exits with a clear error if the version cannot be parsed.
 read_version() {
   local pubspec="$1" content
@@ -99,6 +100,7 @@ read_version() {
   [ -z "$build" ] && build=0
   VERSION_CODE=$((major * 1000000 + minor * 10000 + patch * 100 + build))
   VERSION_BUILD=$build
+  VERSION_FULL="$VERSION+$build"
 }
 
 # --- sha256 of a file ---

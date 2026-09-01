@@ -48,8 +48,8 @@ export FLUTTER_ARGS_LOG="$TMP/flutter-args.log"
   cd "$PROJ"
   PATH="$TMP/bin:$PATH" sh "$SCRIPTS/publish_linux.sh" --skip-build >/dev/null
 )
-[ -f "$PROJ/dist/SmokeApp-1.2.3-linux-x64.tar.gz" ] || fail "tar.gz artifact missing"
-grep -q "smoke_app" <(tar -tzf "$PROJ/dist/SmokeApp-1.2.3-linux-x64.tar.gz") || fail "bundle not in tar.gz"
+[ -f "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.tar.gz" ] || fail "tar.gz artifact missing"
+grep -q "smoke_app" <(tar -tzf "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.tar.gz") || fail "bundle not in tar.gz"
 echo "ok"
 
 echo "==> --obfuscate forwarded to flutter"
@@ -75,9 +75,9 @@ if command -v dpkg-deb >/dev/null 2>&1; then
     cd "$PROJ"
     sh "$SCRIPTS/publish_linux.sh" --skip-build --deb >/dev/null
   )
-  [ -f "$PROJ/dist/SmokeApp-1.2.3-linux-x64.deb" ] || fail "deb artifact missing"
-  dpkg-deb -c "$PROJ/dist/SmokeApp-1.2.3-linux-x64.deb" | grep -q "usr/bin/smoke_app" || fail "deb lacks binary"
-  dpkg-deb -c "$PROJ/dist/SmokeApp-1.2.3-linux-x64.deb" | grep -q "smokeapp.desktop" || fail "deb lacks desktop entry"
+  [ -f "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.deb" ] || fail "deb artifact missing"
+  dpkg-deb -c "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.deb" | grep -q "usr/bin/smoke_app" || fail "deb lacks binary"
+  dpkg-deb -c "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.deb" | grep -q "smokeapp.desktop" || fail "deb lacks desktop entry"
   echo "ok"
 else
   echo "skip (dpkg-deb not installed)"
@@ -89,7 +89,7 @@ if command -v rpmbuild >/dev/null 2>&1; then
     cd "$PROJ"
     sh "$SCRIPTS/publish_linux.sh" --skip-build --rpm >/dev/null
   )
-  [ -f "$PROJ/dist/SmokeApp-1.2.3-linux-x64.rpm" ] || fail "rpm artifact missing"
+  [ -f "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.rpm" ] || fail "rpm artifact missing"
   echo "ok"
 else
   echo "skip (rpmbuild not installed)"
