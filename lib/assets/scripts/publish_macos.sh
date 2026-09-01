@@ -79,4 +79,15 @@ rm -rf "$STAGE"
 trap - EXIT
 
 print_artifact "$DMG_OUT"
+
+# Also emit an auto-update .zip from the very same .app. In-app updates download
+# this zip, strip the single top-level <AppName>.app/ entry, and replace the
+# running app's Contents (ZShell's update_controller + updater.sh). Keeping
+# --keepParent makes the .app the sole top-level dir so the client strips
+# exactly one level to reveal Contents/.
+ZIP_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION-macos.zip"
+rm -f "$ZIP_OUT"
+ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" "$ZIP_OUT"
+print_artifact "$ZIP_OUT"
+
 echo "==> done"

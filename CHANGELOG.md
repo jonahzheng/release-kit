@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.1.11
+
+- macOS `publish` now also emits an auto-update `.zip` next to the `.dmg`, built from the very same signed `.app` (`ditto -c -k --sequesterRsrc --keepParent` keeps `<AppName>.app` as the sole top-level entry so in-app updaters that strip one directory can replace the running app's `Contents`). Output: `dist/<app>-<version>-macos.dmg` + `dist/<app>-<version>-macos.zip`.
+
 ## 0.1.10
 
 - Every `publish` build now auto-injects `--dart-define=APP_VERSION=<x.y.z>` and `--dart-define=APP_BUILD=<build>` from `pubspec.yaml` (all platforms: Windows, Android, macOS, Linux, iOS). Apps can show their real version at runtime via `String.fromEnvironment('APP_VERSION')` / `('APP_BUILD')`; an explicit `build.dartDefine.APP_VERSION`/`APP_BUILD` overrides the auto value.
