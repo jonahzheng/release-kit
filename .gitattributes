@@ -1,0 +1,7 @@
+# POSIX shell scripts and git hooks must keep LF line endings
+# (they break under WSL/Linux when checked out with CRLF).
+*.sh   text eol=lf
+*.hook text eol=lf
+
+# PowerShell scripts are Windows-native.
+*.ps1  text eol=crlf
