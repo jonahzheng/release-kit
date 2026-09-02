@@ -50,6 +50,7 @@ STORE_PASS="${ANDROID_STORE_PASSWORD:-}"
 PUBSPEC="$PROJECT_ROOT/pubspec.yaml"
 read_version "$PUBSPEC"
 [ -z "$APP_NAME" ] && APP_NAME=$(basename "$PROJECT_ROOT")
+write_changelog
 
 echo "==> release-kit publish_android"
 echo "    project: $PROJECT_ROOT"

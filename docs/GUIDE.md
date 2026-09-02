@@ -139,6 +139,21 @@ Skipped when `app.logo` is unset; errors out when the source image is missing. O
 
 ## 3. Packaging
 
+### Versioned changelog
+
+Every `publish` also emits a standard, versioned changelog (Keep a Changelog format) alongside the artifacts: `dist/CHANGELOG-<version>+<build>.md`.
+
+The content is extracted from your project's `CHANGELOG.md` — the section matching the current version (`## [x.y.z] - date` plus its `### Added/Changed/Fixed/...`). If there is no `CHANGELOG.md` (or no section for the version), release-kit falls back to grouping the `git log` since the last tag by conventional-commit type (`feat:` → Added, `fix:` → Fixed, everything else → Changed).
+
+```text
+# MyApp 1.2.3+4
+
+## [1.2.3] - 2026-09-01
+
+### Added
+- ...
+```
+
 ### Windows
 
 ```bash
@@ -245,10 +260,10 @@ release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appima
 | `--appimage` | Build an AppImage via `linuxdeploy` (must be installed; see https://github.com/linuxdeploy/linuxdeploy) |
 
 - Requires a Linux host with Flutter Linux desktop support (GTK toolchain)
-- Default output: portable `dist/<app>-<version>+<build>-linux-x64.tar.gz` (release bundle) — always produced
+- Default output: portable `dist/<app>-<version>+<build>-linux.zip` (release bundle under a single top-level `<app>/` dir) — always produced; used by the website download + in-app auto-update
 - Desktop-entry categories come from `linux.desktopCategories` (default `Utility;`)
 - Icon source for the packages: `linux/runner/my_icon.png` (auto-generated from `app.logo`)
-- Artifacts: `dist/<app>-<version>+<build>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
+- Artifacts: `dist/<app>-<version>+<build>-linux.zip` + optional `.deb` / `.rpm` / `.AppImage` + sha256
 
 ## 4. FAQ
 
@@ -258,3 +273,79 @@ release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appima
 | hook not running | `core.hooksPath` not set | re-run `release-kit init` |
 | Windows build DLL_NOT_FOUND | import table not patched after hardening rename | re-run with the latest scripts (auto-patches) |
 | Android build signing failed | keystore password missing | set `ANDROID_KEY_PASSWORD` etc. env vars |
+
+### Linux / WSL environment issues (not caused by release-kit)
+
+These come from the build host, not from release-kit.
+
+**Q: `release-kit publish linux` prints `Woah! You appear to be trying to run flutter as root.`**
+
+It's a warning, not an error — you're running Flutter as `root` (common under WSL). It doesn't affect packaging; to silence it, run from a non-root user.
+
+**Q: build fails with `Cannot allocate memory, errno = 12` (ENOMEM)**
+
+The host ran out of memory (not disk). Check `free -h`. Under WSL1 the distro shares the host's RAM and `.wslconfig` limits don't apply, so heavy Linux builds easily hit this.
+
+```bash
+free -h          # check available memory
+```
+
+Free up memory (close other apps) or move to WSL2 (see next).
+
+**Q: my `.wslconfig` `[wsl2]` `memory=` / `swap=` has no effect**
+
+Those settings only apply to WSL2. If `wsl -l -v` shows `VERSION 1`, you're on WSL1 and the `[wsl2]` section is ignored. Convert to WSL2:
+
+```powershell
+wsl --set-version <distro> 2
+```
+
+**Q: converting to WSL2 fails with `HCS_E_SERVICE_NOT_AVAILABLE` / "required feature is not installed"**
+
+The Virtual Machine Platform isn't running. Enable it and reboot (reboot is mandatory):
+
+```powershell
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+```
+
+Then reboot Windows, confirm the hypervisor is up, and convert:
+
+```powershell
+(Get-CimInstance Win32_ComputerSystem).HypervisorPresent   # must be True
+wsl --set-version <distro> 2
+```
+
+If it's still `False`, run `bcdedit /set hypervisorlaunchtype auto` and reboot again.
+
+**Q: `--rpm` fails with `rpmbuild not found`**
+
+```bash
+sudo apt install -y rpm
+```
+
+**Q: `--appimage` fails with `linuxdeploy not found`**
+
+Install `linuxdeploy` (plus the GTK plugin so GTK deps get bundled):
+
+```bash
+wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+chmod +x linuxdeploy-x86_64.AppImage
+sudo mv linuxdeploy-x86_64.AppImage /usr/local/bin/linuxdeploy
+
+wget https://raw.githubusercontent.com/linuxdeploy/linuxdeploy-plugin-gtk/master/linuxdeploy-plugin-gtk.sh
+chmod +x linuxdeploy-plugin-gtk.sh
+sudo mv linuxdeploy-plugin-gtk.sh /usr/local/bin/linuxdeploy-plugin-gtk
+```
+
+**Q: `--appimage` fails with `fuse: device not found` / `Cannot mount AppImage`**
+
+`linuxdeploy` is itself an AppImage and needs FUSE, which is often unavailable under WSL. Wrap it to run without FUSE:
+
+```bash
+sudo mv /usr/local/bin/linuxdeploy /usr/local/bin/linuxdeploy.AppImage
+printf '#!/bin/sh\nexec /usr/local/bin/linuxdeploy.AppImage --appimage-extract-and-run "$@"\n' \
+  | sudo tee /usr/local/bin/linuxdeploy >/dev/null
+sudo chmod +x /usr/local/bin/linuxdeploy
+```
+
+Then re-run `release-kit publish linux --appimage`.

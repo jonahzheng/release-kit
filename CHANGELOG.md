@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.1.18
+
+- Fix `.deb`/`.rpm` packages shipping only the launcher binary (missing `lib/` + `data/`, so the installed app could not run). They now bundle the full release bundle under `/usr/lib/<id>/` and expose the binary via a `/usr/bin` symlink.
+
+## 0.1.17
+
+- Fix `--appimage`: `linuxdeploy` requires a `.desktop` file and an `AppRun` inside the AppDir, but the raw Flutter bundle has neither, so AppImage packaging failed with `Desktop file not found`. The AppImage path now stages the bundle, injects the desktop entry + `AppRun` (the binary stays at the AppDir root so it can still locate `lib/`/`data/`), bundles the icon, and copies the resulting `.AppImage` to `dist/`.
+
+## 0.1.16
+
+- Linux `publish` now always emits a portable `.zip` (`dist/<app>-<version>+<build>-linux.zip`, single top-level `<app>/` dir) as the default artifact — the same shape the Windows/macOS packs and in-app auto-update use. The previous `.tar.gz` default is removed; `--deb` / `--rpm` / `--appimage` still produce the distro install packages on top of the zip.
+
+## 0.1.15
+
+- Fix garbled non-ASCII text in the generated `dist/CHANGELOG-<version>+<build>.md` on Windows: read the project `CHANGELOG.md` as UTF-8, decode `git log` output as UTF-8, and write the result as UTF-8 without BOM.
+
+## 0.1.14
+
+- Every `publish` now emits a standard, versioned changelog alongside the artifacts: `dist/CHANGELOG-<version>+<build>.md`. The content is extracted from the project's `CHANGELOG.md` (the Keep-a-Changelog section matching the current version); when there is no `CHANGELOG.md` (or no section for the version), it falls back to grouping the `git log` since the last tag by conventional-commit type (`feat:` → Added, `fix:` → Fixed, everything else → Changed).
+
 ## 0.1.13
 
 - macOS and Linux package filenames now include the build number, matching the Windows convention: `dist/<app>-<version>+<build>-macos.dmg` / `.zip`, `dist/<app>-<version>+<build>-linux-x64.tar.gz` / `.deb` / `.rpm` (e.g. `ZShell-1.41.2+79-macos.zip`). `read_version` now also exports `VERSION_FULL` (`x.y.z+build`).

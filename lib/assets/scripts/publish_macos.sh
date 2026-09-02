@@ -37,6 +37,7 @@ APP_NAME=$(cfg_get "app.name" "$CONFIG_FILE")
 OUT_DIR=$(cfg_get "output.dir" "$CONFIG_FILE"); [ -z "$OUT_DIR" ] && OUT_DIR=dist
 read_version "$PROJECT_ROOT/pubspec.yaml"
 [ -z "$APP_NAME" ] && APP_NAME=$(basename "$PROJECT_ROOT")
+write_changelog
 
 echo "==> release-kit publish_macos"
 echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION_FULL)"

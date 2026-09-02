@@ -5,7 +5,7 @@
 # stands in for build output.
 #
 # Usage: sh test/publish_linux_test.sh
-# Requirements: sh + tar (dpkg-deb optional: tested only when present)
+# Requirements: sh + zip + unzip (dpkg-deb optional: tested only when present)
 
 set -e
 KIT_ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
@@ -33,6 +33,20 @@ printf 'PNG-DATA' > "$PROJ/assets/logo.png"
 # fake built executable (as CMake BINARY_NAME would produce)
 printf 'ELF' > "$PROJ/build/linux/x64/release/bundle/smoke_app"
 chmod +x "$PROJ/build/linux/x64/release/bundle/smoke_app"
+# Keep-a-Changelog with a section for the current version + an older one
+cat > "$PROJ/CHANGELOG.md" <<'EOF'
+# Changelog
+
+## [1.2.3] - 2026-09-01
+
+### Added
+- Smoke feature
+
+## [1.2.2] - 2026-08-01
+
+### Fixed
+- Old bug
+EOF
 
 # --- stub flutter: record args, "build" nothing (bundle already exists) ---
 cat > "$TMP/bin/flutter" <<'EOF'
@@ -42,14 +56,22 @@ exit 0
 EOF
 chmod +x "$TMP/bin/flutter"
 
-echo "==> publish_linux.sh --skip-build (tar.gz)"
+echo "==> publish_linux.sh --skip-build (zip)"
 export FLUTTER_ARGS_LOG="$TMP/flutter-args.log"
 (
   cd "$PROJ"
   PATH="$TMP/bin:$PATH" sh "$SCRIPTS/publish_linux.sh" --skip-build >/dev/null
 )
-[ -f "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.tar.gz" ] || fail "tar.gz artifact missing"
-grep -q "smoke_app" <(tar -tzf "$PROJ/dist/SmokeApp-1.2.3+4-linux-x64.tar.gz") || fail "bundle not in tar.gz"
+[ -f "$PROJ/dist/SmokeApp-1.2.3+4-linux.zip" ] || fail "zip artifact missing"
+unzip -l "$PROJ/dist/SmokeApp-1.2.3+4-linux.zip" | grep -q "smoke_app" || fail "bundle not in zip"
+echo "ok"
+
+echo "==> versioned changelog extracted from CHANGELOG.md"
+CL="$PROJ/dist/CHANGELOG-1.2.3+4.md"
+[ -f "$CL" ] || fail "changelog artifact missing"
+grep -q "## \[1.2.3\]" "$CL" || fail "changelog missing current version header"
+grep -q "Smoke feature" "$CL" || fail "changelog missing current version content"
+if grep -q "Old bug" "$CL"; then fail "changelog leaked an older version's entry"; fi
 echo "ok"
 
 echo "==> --obfuscate forwarded to flutter"

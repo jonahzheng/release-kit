@@ -119,6 +119,96 @@ Write-Host "    app: $appName ($version)  binary: $binary"
 Write-Host "    hardening: $(if ($hardEnabled) {'on'} else {'off'})"
 Write-Host "    clean-flutter: $(if ($CleanFlutter) {'on'} else {'off'})"
 
+# --- changelog: emit CHANGELOG-<version>+<build>.md alongside the package ---
+function Extract-VersionSection($clPath, $ver) {
+  if (-not (Test-Path $clPath)) { return "" }
+  $result = New-Object System.Collections.Generic.List[string]
+  $found = $false
+  foreach ($line in Get-Content $clPath -Encoding UTF8) {
+    $line = $line -replace '^\uFEFF', ''
+    if ($line -match '^##\s') {
+      $head = $line -replace '^##\s*', ''
+      $head = $head -replace '^\[', '' -replace '\].*$', ''
+      $head = $head -replace '[ -].*$', ''
+      if ($head -eq $ver) { $found = $true; $result.Add($line); continue }
+      if ($found) { break }
+    }
+    if ($found) { $result.Add($line) }
+  }
+  if ($found) { return ($result -join "`n") }
+  return ""
+}
+
+function Get-GitChangelog($ver) {
+  $now = Get-Date -Format "yyyy-MM-dd"
+  $header = "## [$ver] - $now"
+  if (-not (Get-Command git -ErrorAction SilentlyContinue)) {
+    return "$header`n`n- Initial release of $version+$verBuild."
+  }
+  # git emits UTF-8; decode native output as UTF-8 so non-ASCII (e.g. Chinese)
+  # commit subjects don't get mangled by the console codepage.
+  $prevEnc = [Console]::OutputEncoding
+  try {
+    [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
+    $tag = (& git -C $proj describe --tags --abbrev=0 2>$null)
+    $range = ""
+    if ($tag) { $range = "$tag..HEAD" }
+    $args = @("-C", $proj, "log", "--pretty=format:%s")
+    if ($range) { $args += $range }
+    $subjects = & git @args 2>$null
+  } finally {
+    [Console]::OutputEncoding = $prevEnc
+  }
+  if ($LASTEXITCODE -ne 0 -or -not $subjects) {
+    return "$header`n`n- Initial release of $version+$verBuild."
+  }
+  $added = @(); $changed = @(); $fixed = @()
+  foreach ($s in $subjects) {
+    if ([string]::IsNullOrWhiteSpace($s)) { continue }
+    if ($s -match '^(feat|add|Add):\s*(.*)$') { $added += $matches[2] }
+    elseif ($s -match '^(fix|Fix):\s*(.*)$') { $fixed += $matches[2] }
+    else { $changed += $s }
+  }
+  $sb = New-Object System.Text.StringBuilder
+  [void]$sb.AppendLine($header)
+  [void]$sb.AppendLine()
+  if ($added.Count -gt 0) {
+    [void]$sb.AppendLine("### Added"); [void]$sb.AppendLine()
+    foreach ($a in $added) { [void]$sb.AppendLine("- $a") }
+    [void]$sb.AppendLine()
+  }
+  if ($changed.Count -gt 0) {
+    [void]$sb.AppendLine("### Changed"); [void]$sb.AppendLine()
+    foreach ($c in $changed) { [void]$sb.AppendLine("- $c") }
+    [void]$sb.AppendLine()
+  }
+  if ($fixed.Count -gt 0) {
+    [void]$sb.AppendLine("### Fixed"); [void]$sb.AppendLine()
+    foreach ($f in $fixed) { [void]$sb.AppendLine("- $f") }
+    [void]$sb.AppendLine()
+  }
+  return $sb.ToString().TrimEnd()
+}
+
+function Write-Changelog {
+  $clPath = $null
+  if (Test-Path (Join-Path $proj "CHANGELOG.md")) { $clPath = Join-Path $proj "CHANGELOG.md" }
+  elseif (Test-Path (Join-Path (Split-Path -Parent $proj) "CHANGELOG.md")) { $clPath = Join-Path (Split-Path -Parent $proj) "CHANGELOG.md" }
+
+  $changelogDir = Split-Path $OutputDir
+  if (-not (Test-Path $changelogDir)) { New-Item -ItemType Directory -Path $changelogDir -Force | Out-Null }
+  $outFile = Join-Path $changelogDir "CHANGELOG-$version+$verBuild.md"
+
+  $body = ""
+  if ($clPath) { $body = Extract-VersionSection $clPath $version }
+  if (-not $body) { $body = Get-GitChangelog $version }
+
+  $content = "# $appName $version+$verBuild`n`n$body"
+  # UTF-8 without BOM (matches the shell scripts; clean for third-party parsers)
+  [System.IO.File]::WriteAllText($outFile, $content, (New-Object System.Text.UTF8Encoding($false)))
+  Write-Host "==> changelog: $outFile"
+}
+
 # --- build ---
 if (-not $SkipBuild) {
   Push-Location $proj
@@ -161,6 +251,8 @@ Copy-Item (Join-Path $release "$binary.exe") $OutputDir
 Get-ChildItem $release -Filter "*.dll" | Copy-Item -Destination $OutputDir
 Copy-Item (Join-Path $release "data") $OutputDir -Recurse
 Write-Host "==> collected: $OutputDir"
+
+Write-Changelog
 
 # --- optional hardening (rename engine dll + patch imports) ---
 if ($hardEnabled -and -not $NoRename) {

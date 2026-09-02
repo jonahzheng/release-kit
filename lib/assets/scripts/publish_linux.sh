@@ -4,7 +4,9 @@
 #   ./publish_linux.sh [--skip-build] [--obfuscate] [--deb] [--rpm] [--appimage]
 # Run from the Flutter project root (or app/ subdir in a monorepo).
 #
-# Always produces a portable tar.gz from the release bundle. Optional extras:
+# Always produces a portable .zip from the release bundle (single top-level
+# <app>/ dir) — used by the website download and in-app auto-update, the same
+# shape the Windows/macOS packs produce. Optional install packages:
 #   --deb        build a .deb (dpkg-deb) with desktop entry + icons
 #   --rpm        build an .rpm (rpmbuild) with desktop entry + icons
 #   --appimage   build an AppImage via linuxdeploy (see
@@ -40,11 +42,12 @@ APP_NAME=$(cfg_get "app.name" "$CONFIG_FILE")
 OUT_DIR=$(cfg_get "output.dir" "$CONFIG_FILE"); [ -z "$OUT_DIR" ] && OUT_DIR=dist
 read_version "$PROJECT_ROOT/pubspec.yaml"
 [ -z "$APP_NAME" ] && APP_NAME=$(basename "$PROJECT_ROOT")
+write_changelog
 
 echo "==> release-kit publish_linux"
 echo "    project: $PROJECT_ROOT  app: $APP_NAME ($VERSION_FULL)"
 echo "    obfuscate: $(if [ "$OBFUSCATE" = 1 ]; then printf 'on'; else printf 'off'; fi)"
-echo "    packages: $(if [ "$DO_DEB" = 1 ]; then printf 'deb '; fi)$(if [ "$DO_RPM" = 1 ]; then printf 'rpm '; fi)$(if [ "$DO_APPIMAGE" = 1 ]; then printf 'appimage'; fi)"
+echo "    packages: zip$(if [ "$DO_DEB" = 1 ]; then printf ' deb'; fi)$(if [ "$DO_RPM" = 1 ]; then printf ' rpm'; fi)$(if [ "$DO_APPIMAGE" = 1 ]; then printf ' appimage'; fi)"
 
 if [ "$SKIP_BUILD" = "0" ]; then
   OBF_ARGS=""
@@ -78,10 +81,25 @@ fi
 PKG_ID=$(echo "$APP_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9]/-/g')
 
 mkdir -p "$PROJECT_ROOT/$OUT_DIR"
-TGZ="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x64.tar.gz"
 
-tar -czf "$TGZ" -C "$(dirname "$BUNDLE")" "$(basename "$BUNDLE")"
-print_artifact "$TGZ"
+# --- portable .zip (always; website download + in-app auto-update) ---
+if ! command -v zip >/dev/null 2>&1; then
+  echo "release-kit: 'zip' not found on PATH (needed for Linux packaging)" >&2
+  exit 1
+fi
+ZIP_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux.zip"
+rm -f "$ZIP_OUT"
+# Stage the bundle under an app-named folder so the zip has a single clean
+# top-level dir (matches Windows packaging; the client strips one level on
+# extract). ZShell-<version>+<build>-linux.zip is the filename the download
+# page / auto-update expect.
+STAGE=$(mktemp -d)
+trap 'rm -rf "$STAGE"' EXIT
+cp -a "$BUNDLE" "$STAGE/$APP_NAME"
+(cd "$STAGE" && zip -rq "$ZIP_OUT" "$APP_NAME")
+rm -rf "$STAGE"
+trap - EXIT
+print_artifact "$ZIP_OUT"
 
 # --- .deb package (dpkg-deb) ---
 if [ "$DO_DEB" = "1" ]; then
@@ -91,8 +109,12 @@ if [ "$DO_DEB" = "1" ]; then
   fi
   STAGE=$(mktemp -d)
   trap 'rm -rf "$STAGE"' EXIT
-  mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/bin" "$STAGE/usr/share/applications"
-  cp "$BIN" "$STAGE/usr/bin/$BIN_NAME"
+  mkdir -p "$STAGE/DEBIAN" "$STAGE/usr/bin" "$STAGE/usr/lib" "$STAGE/usr/share/applications"
+  # ship the whole release bundle (binary + lib/ + data/) under /usr/lib/<id>;
+  # the binary resolves lib/ and data/ relative to its own location, so keep
+  # them together and expose the binary via a /usr/bin symlink.
+  cp -a "$BUNDLE" "$STAGE/usr/lib/$PKG_ID"
+  ln -s "../lib/$PKG_ID/$BIN_NAME" "$STAGE/usr/bin/$BIN_NAME"
 
   DESKTOP_CATEGORIES=$(cfg_get "linux.desktopCategories" "$CONFIG_FILE")
   [ -z "$DESKTOP_CATEGORIES" ] && DESKTOP_CATEGORIES="Utility;"
@@ -143,9 +165,10 @@ if [ "$DO_RPM" = "1" ]; then
   STAGE=$(mktemp -d)
   trap 'rm -rf "$STAGE"' EXIT
   mkdir -p "$STAGE/RPMS" "$STAGE/SOURCES" "$STAGE/SPECS" "$STAGE/BUILD" "$STAGE/BUILDROOT"
-  mkdir -p "$STAGE/approot/usr/bin" "$STAGE/approot/usr/share/applications"
+  mkdir -p "$STAGE/approot/usr/bin" "$STAGE/approot/usr/lib" "$STAGE/approot/usr/share/applications"
 
-  cp "$BIN" "$STAGE/approot/usr/bin/$BIN_NAME"
+  cp -a "$BUNDLE" "$STAGE/approot/usr/lib/$PKG_ID"
+  ln -s "../lib/$PKG_ID/$BIN_NAME" "$STAGE/approot/usr/bin/$BIN_NAME"
 
   DESKTOP_CATEGORIES=$(cfg_get "linux.desktopCategories" "$CONFIG_FILE")
   [ -z "$DESKTOP_CATEGORIES" ] && DESKTOP_CATEGORIES="Utility;"
@@ -179,6 +202,7 @@ if [ "$DO_RPM" = "1" ]; then
     echo ""
     echo "%files"
     echo "/usr/bin/$BIN_NAME"
+    echo "/usr/lib/$PKG_ID"
     echo "/usr/share/applications/$PKG_ID.desktop"
     echo "%config /usr/share/icons/hicolor/512x512/apps/$PKG_ID.png"
   } > "$STAGE/SPECS/$PKG_ID.spec"
@@ -205,16 +229,54 @@ if [ "$DO_APPIMAGE" = "1" ]; then
     exit 1
   fi
   echo "==> building AppImage ..."
-  linuxdeploy --appdir "$BUNDLE" -o appimage
-  APPRUN="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x86_64.AppImage"
-  # linuxdeploy writes the AppImage next to the bundle; move it if present
-  for f in "$(dirname "$BUNDLE")"/"$APP_NAME"*.AppImage; do
-    if [ -f "$f" ]; then
-      cp "$f" "$APPRUN"
-      print_artifact "$APPRUN"
-      break
-    fi
-  done
+
+  DESKTOP_CATEGORIES=$(cfg_get "linux.desktopCategories" "$CONFIG_FILE")
+  [ -z "$DESKTOP_CATEGORIES" ] && DESKTOP_CATEGORIES="Utility;"
+
+  # linuxdeploy needs a .desktop file + AppRun inside the AppDir; the raw
+  # Flutter bundle has neither, so stage a copy and add them without touching
+  # the build output. The binary stays at the AppDir root (it resolves lib/
+  # and data/ relative to its own location).
+  STAGE=$(mktemp -d)
+  trap 'rm -rf "$STAGE"' EXIT
+  cp -a "$BUNDLE" "$STAGE/AppDir"
+
+  {
+    echo "[Desktop Entry]"
+    echo "Type=Application"
+    echo "Name=$APP_NAME"
+    echo "Comment=Release build of $APP_NAME"
+    echo "Exec=$BIN_NAME"
+    echo "Icon=$PKG_ID"
+    echo "Terminal=false"
+    echo "Categories=$DESKTOP_CATEGORIES"
+  } > "$STAGE/AppDir/$PKG_ID.desktop"
+
+  cat > "$STAGE/AppDir/AppRun" <<EOF
+#!/bin/sh
+HERE=\$(dirname "\$(readlink -f "\$0")")
+exec "\$HERE/$BIN_NAME" "\$@"
+EOF
+  chmod +x "$STAGE/AppDir/AppRun"
+
+  # best available icon: linux/runner/my_icon.png (generated from app.logo)
+  if [ -f "$PROJECT_ROOT/linux/runner/my_icon.png" ]; then
+    cp "$PROJECT_ROOT/linux/runner/my_icon.png" "$STAGE/AppDir/$PKG_ID.png"
+  fi
+
+  # run linuxdeploy from inside STAGE so the AppImage lands where we can find it
+  (cd "$STAGE" && linuxdeploy --appdir AppDir -o appimage)
+
+  APPIMAGE_FILE=$(find "$STAGE" -maxdepth 1 -name "*.AppImage" -print 2>/dev/null | head -n1)
+  if [ -z "$APPIMAGE_FILE" ]; then
+    echo "release-kit: linuxdeploy produced no AppImage" >&2
+    exit 1
+  fi
+  APPIMAGE_OUT="$PROJECT_ROOT/$OUT_DIR/$APP_NAME-$VERSION_FULL-linux-x86_64.AppImage"
+  cp "$APPIMAGE_FILE" "$APPIMAGE_OUT"
+  rm -rf "$STAGE"
+  trap - EXIT
+  print_artifact "$APPIMAGE_OUT"
 fi
 
 echo "==> done"

@@ -144,3 +144,107 @@ print_artifact() {
   echo "    size: $(wc -c < "$f") bytes"
   echo "    sha256: $(sha256_file "$f")"
 }
+
+# --- versioned changelog for the published build ---
+# write_changelog: emits <OUT_DIR>/CHANGELOG-<VERSION_FULL>.md
+#   - preferred: the current version's section from the project's CHANGELOG.md
+#     (Keep a Changelog: `## [x.y.z] - date` + `### Added/Changed/Fixed`)
+#   - fallback:  git log since the last tag, grouped by conventional-commit type
+# Requires VERSION, VERSION_FULL, APP_NAME, PROJECT_ROOT, OUT_DIR.
+write_changelog() {
+  local changelog="" out
+  if [ -f "$PROJECT_ROOT/CHANGELOG.md" ]; then
+    changelog="$PROJECT_ROOT/CHANGELOG.md"
+  elif [ -f "$PROJECT_ROOT/../CHANGELOG.md" ]; then
+    changelog="$PROJECT_ROOT/../CHANGELOG.md"
+  fi
+
+  mkdir -p "$PROJECT_ROOT/$OUT_DIR"
+  out="$PROJECT_ROOT/$OUT_DIR/CHANGELOG-$VERSION_FULL.md"
+  {
+    echo "# $APP_NAME $VERSION_FULL"
+    echo ""
+  } > "$out"
+
+  if [ -n "$changelog" ] && extract_version_section "$VERSION" "$changelog" >> "$out"; then
+    :
+  else
+    git_changelog >> "$out"
+  fi
+  echo "==> changelog: $out"
+}
+
+# Prints the section for [ver] from a Keep-a-Changelog CHANGELOG.md
+# (from the matching `## [ver]` header up to the next `## ` header, inclusive
+# of the matching header). Returns 0 only when a section was found.
+extract_version_section() {
+  awk -v ver="$1" '
+    /^## / {
+      h = $0
+      sub(/^## */, "", h)
+      sub(/^\[/, "", h)
+      sub(/\].*$/, "", h)
+      sub(/[ -].*$/, "", h)
+      if (h == ver) { print; found = 1; next }
+      if (found) exit
+    }
+    found { print }
+    END { exit !found }
+  ' "$2"
+}
+
+# Generates a changelog from the git log (last tag .. HEAD) grouped into
+# Keep-a-Changelog categories from conventional-commit prefixes.
+git_changelog() {
+  local range="" tag dir
+  if git -C "$PROJECT_ROOT" rev-parse --git-dir >/dev/null 2>&1; then
+    tag=$(git -C "$PROJECT_ROOT" describe --tags --abbrev=0 2>/dev/null || true)
+    [ -n "$tag" ] && range="$tag..HEAD"
+  fi
+
+  dir=$(mktemp -d)
+  : > "$dir/added"
+  : > "$dir/changed"
+  : > "$dir/fixed"
+
+  if [ -n "$range" ]; then
+    git -C "$PROJECT_ROOT" log "$range" --pretty=tformat:'%s' 2>/dev/null
+  else
+    git -C "$PROJECT_ROOT" log --pretty=tformat:'%s' 2>/dev/null
+  fi | while IFS= read -r subject; do
+    [ -z "$subject" ] && continue
+    case "$subject" in
+      feat:*|add:*|Add:*)
+        printf '%s\n' "$subject" | sed 's/^[^:]*:[[:space:]]*/- /' >> "$dir/added" ;;
+      fix:*|Fix:*)
+        printf '%s\n' "$subject" | sed 's/^[^:]*:[[:space:]]*/- /' >> "$dir/fixed" ;;
+      *)
+        printf -- '- %s\n' "$subject" >> "$dir/changed" ;;
+    esac
+  done
+
+  echo "## [$VERSION] - $(date +%Y-%m-%d)"
+  echo ""
+  if [ -s "$dir/added" ]; then
+    echo "### Added"
+    echo ""
+    cat "$dir/added"
+    echo ""
+  fi
+  if [ -s "$dir/changed" ]; then
+    echo "### Changed"
+    echo ""
+    cat "$dir/changed"
+    echo ""
+  fi
+  if [ -s "$dir/fixed" ]; then
+    echo "### Fixed"
+    echo ""
+    cat "$dir/fixed"
+    echo ""
+  fi
+  if [ ! -s "$dir/added" ] && [ ! -s "$dir/changed" ] && [ ! -s "$dir/fixed" ]; then
+    echo "- Initial release of $VERSION_FULL."
+  fi
+  rm -rf "$dir"
+}

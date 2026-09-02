@@ -139,6 +139,21 @@ app.logo: assets/logo.png
 
 ## 三、打包
 
+### 版本更新日志
+
+每次 `publish` 还会在产物旁生成一份标准的版本化更新日志（Keep a Changelog 格式）：`dist/CHANGELOG-<version>+<build>.md`。
+
+内容取自项目的 `CHANGELOG.md`——提取与当前版本匹配的章节（`## [x.y.z] - 日期` 及其 `### Added/Changed/Fixed/...`）。若项目没有 `CHANGELOG.md`（或缺少当前版本章节），则回退为按 conventional-commit 类型对「上次 tag 以来的 git 提交」分组（`feat:` → Added、`fix:` → Fixed、其余 → Changed）。
+
+```text
+# MyApp 1.2.3+4
+
+## [1.2.3] - 2026-09-01
+
+### Added
+- ...
+```
+
 ### Windows
 
 ```bash
@@ -245,10 +260,10 @@ release-kit publish linux [--skip-build] [--obfuscate] [--deb] [--rpm] [--appima
 | `--appimage` | 通过 `linuxdeploy` 打 AppImage（需安装；见 https://github.com/linuxdeploy/linuxdeploy） |
 
 - 需 Linux 主机，Flutter Linux 桌面支持（GTK 工具链）
-- 默认始终产出便携 `dist/<app>-<version>+<build>-linux-x64.tar.gz`（release bundle）
+- 默认始终产出便携 `dist/<app>-<version>+<build>-linux.zip`（release bundle，单一顶层 `<app>/` 目录），用于官网下载 + 应用内自动更新
 - 桌面项分类来自 `linux.desktopCategories`（默认 `Utility;`）
 - 包内图标来源：`linux/runner/my_icon.png`（由 `app.logo` 自动生成）
-- 产物：`dist/<app>-<version>+<build>-linux-x64.tar.gz` / `.deb` / `.rpm` + sha256
+- 产物：`dist/<app>-<version>+<build>-linux.zip` + 可选 `.deb` / `.rpm` / `.AppImage` + sha256
 
 ## 四、常见问题
 
